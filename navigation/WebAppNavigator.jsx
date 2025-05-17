@@ -19,6 +19,16 @@ import ChangePasswordScreen from "../profile/ChangePasswordScreen";
 import AdminDashboardScreen from "../screens/AdminDashboardScreen";
 
 // Web-compatible navigation component
+// Route change tracker for Tempo
+const RouteChangeTracker = () => {
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && window.TempoDevtools) {
+      window.TempoDevtools.trackRouteChange(window.location.pathname);
+    }
+  }, [window.location.pathname]);
+  return null;
+};
+
 const WebAppNavigator = () => {
   const { user } = useUser();
 

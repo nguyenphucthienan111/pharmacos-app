@@ -23,9 +23,7 @@ const LoginScreen = ({ navigation }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isLoginMode, setIsLoginMode] = useState(
-    initialParams?.isRegisterMode ? false : true
-  );
+  const [isLoginMode, setIsLoginMode] = useState(true);
 
   // Get user context
   const { user, loading } = useUser();
