@@ -12,7 +12,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-} from "../components/WebCompatUI";
+} from "../components/WebCompatUI.native";
 
 // Import a web-compatible icon library
 import { Eye, EyeOff, Mail, Lock, Github, Twitter } from "lucide-react";

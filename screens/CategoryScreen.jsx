@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-} from "../components/WebCompatUI";
+} from "../components/WebCompatUI.native";
 import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
 import ProductCard from "../components/ProductCard";

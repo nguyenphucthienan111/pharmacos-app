@@ -12,7 +12,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-} from "../components/WebCompatUI";
+} from "../components/WebCompatUI.native";
 
 import { Feather } from "@expo/vector-icons";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "../components/WebCompatUI";
+import { View, Text, StyleSheet } from "../components/WebCompatUI.native";
 import { colors, typography } from "../theme/theme";
 
 const AdminDashboardScreen = () => {
