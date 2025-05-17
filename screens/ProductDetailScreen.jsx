@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-} from "react-native";
+} from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
 import { UserContext } from "../context/UserContext";

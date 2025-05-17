@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { UserProvider } from "./context/UserContext";
+import { ThemeProvider } from "./theme/ThemeProvider";
 
 const App = () => {
   const [Navigator, setNavigator] = useState(null);
@@ -25,11 +26,13 @@ const App = () => {
   if (!Navigator) return null;
 
   return (
-    <UserProvider>
-      <Suspense fallback={null}>
-        <Navigator />
-      </Suspense>
-    </UserProvider>
+    <ThemeProvider>
+      <UserProvider>
+        <Suspense fallback={null}>
+          <Navigator />
+        </Suspense>
+      </UserProvider>
+    </ThemeProvider>
   );
 };
 

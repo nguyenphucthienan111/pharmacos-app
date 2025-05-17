@@ -9,7 +9,7 @@ import {
   TextInput,
   Image,
   ActivityIndicator,
-} from "../components/WebCompatUI.native";
+} from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
 import CategoryCard from "../components/CategoryCard";

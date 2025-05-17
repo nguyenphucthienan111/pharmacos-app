@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-} from "../components/WebCompatUI.native";
+} from "../components/WebCompatUI"; // <-- FIXED: remove .native
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
