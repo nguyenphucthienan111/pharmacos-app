@@ -76,7 +76,18 @@ const AppNavigator = () => {
   const { user } = useContext(UserContext);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      onReady={() => {
+        if (process.env.NEXT_PUBLIC_TEMPO) {
+          TempoDevtools.onRouteChange();
+        }
+      }}
+      onStateChange={() => {
+        if (process.env.NEXT_PUBLIC_TEMPO) {
+          TempoDevtools.onRouteChange();
+        }
+      }}
+    >
       <Stack.Navigator
         screenOptions={{
           headerStyle: {

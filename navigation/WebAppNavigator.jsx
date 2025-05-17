@@ -55,6 +55,7 @@ const WebAppNavigator = () => {
 
   return (
     <Router>
+      <RouteChangeTracker />
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/category/:id" element={<CategoryScreen />} />
