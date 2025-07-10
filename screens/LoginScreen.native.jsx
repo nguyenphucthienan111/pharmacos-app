@@ -32,7 +32,7 @@ const DatePicker = ({ label, value, onChangeText, placeholder, maxLength, keyboa
   </View>
 );
 
-const LoginScreen = () => {
+const LoginScreen = ({navigation}) => {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -90,7 +90,7 @@ const LoginScreen = () => {
     if (!validateRegisterForm()) return;
     setIsLoading(true);
     setError("");
-    setSuccess("");
+
     const userData = {
       username: regUsername,
       password: regPassword,
@@ -99,12 +99,15 @@ const LoginScreen = () => {
       gender: regGender,
       dateOfBirth: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
     };
+
     const result = await register(userData);
     if (result.success) {
-      setSuccess(result.message);
-      setTimeout(() => {
-        toggleAuthMode();
-      }, 3000);
+      // Đăng ký thành công, chuyển hướng đến màn hình xác thực
+      Alert.alert(
+        "Registration Successful",
+        "A verification token has been sent to your email. Please check and enter it on the next screen.",
+        [{ text: "OK", onPress: () => navigation.navigate('VerifyEmail') }]
+      );
     } else {
       setError(result.message);
     }

@@ -11,6 +11,7 @@ export const useUser = () => useContext(UserContext);
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,17 +22,10 @@ export const UserProvider = ({ children }) => {
   const loadUser = async () => {
     setLoading(true);
     const userData = await UserRepository.getUser();
-    if (userData) {
-      const userInstance = new User(
-        userData.name,
-        userData.email,
-        userData.phone,
-        "",
-        userData.isAdmin
-      );
-      setUser(userInstance);
-    } else {
-      setUser(null);
+    const storedToken = await UserRepository.getToken();
+    if (userData && storedToken) {
+      setUser(new User(userData));
+      setToken(storedToken);
     }
     setLoading(false);
   };
@@ -41,22 +35,24 @@ export const UserProvider = ({ children }) => {
     setError(null);
     try {
       const response = await fetch(ApiEndpoints.AUTH.LOGIN, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+      
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Login failed");
+      if (!response.ok) throw new Error(data.message || 'Login failed');
 
-      const loggedInUser = new User(
-        data.user.name,
-        data.user.email,
-        data.user.phone,
-        "",
-        data.user.role?.toLowerCase() === "admin"
-      );
+      const loggedInUser = new User(data.user);
+      
+      // Lưu toàn bộ đối tượng user (đã có profile lồng nhau) và token
       await UserRepository.saveUser(loggedInUser);
+      await UserRepository.saveToken(data.token);
+      
+      // Cập nhật state
       setUser(loggedInUser);
+      setToken(data.token);
+
       return { success: true };
     } catch (err) {
       console.error("Login failed:", err);
@@ -66,6 +62,13 @@ export const UserProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  const logout = async () => {
+    await UserRepository.clearAll();
+    setUser(null);
+    setToken(null);
+  };
+
 
   // --- HÀM REGISTER ĐÃ ĐƯỢC CẬP NHẬT ---
   const register = async (userData) => {
@@ -98,11 +101,6 @@ export const UserProvider = ({ children }) => {
   };
   // --- KẾT THÚC CẬP NHẬT ---
 
-  const logout = async () => {
-    await UserRepository.saveUser(null);
-    setUser(null);
-  };
-
   // Các hàm khác giữ nguyên
   const updateUserInfo = async (name, email, phone) => { /* ... */ };
   const updatePassword = async (currentPassword, newPassword) => { /* ... */ };
@@ -113,6 +111,7 @@ export const UserProvider = ({ children }) => {
     <UserContext.Provider
       value={{
         user,
+        token, // Cung cấp token qua context nếu cần
         loading,
         error,
         login,

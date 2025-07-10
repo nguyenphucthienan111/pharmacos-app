@@ -4,26 +4,26 @@ import { User } from "../models/User";
 class UserRepository {
   constructor() {
     this.USER_KEY = "user_data";
-    // Xóa bỏ việc khởi tạo người dùng mặc định
+    this.TOKEN_KEY = "auth_token"; // Thêm khóa cho token
   }
 
+  // --- Lấy thông tin người dùng ---
   async getUser() {
     try {
       const userData = await AsyncStorage.getItem(this.USER_KEY);
-      // Trả về null nếu không có người dùng nào được lưu trữ
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error("Error getting user:", error);
-      return null; // Trả về null khi có lỗi
+      return null;
     }
   }
 
+  // --- Lưu thông tin người dùng ---
   async saveUser(user) {
     try {
       if (user) {
         await AsyncStorage.setItem(this.USER_KEY, JSON.stringify(user));
       } else {
-        // Xóa thông tin người dùng khi đăng xuất
         await AsyncStorage.removeItem(this.USER_KEY);
       }
       return true;
@@ -31,6 +31,43 @@ class UserRepository {
       console.error("Error saving user:", error);
       return false;
     }
+  }
+
+  // --- Lấy token ---
+  async getToken() {
+    try {
+      return await AsyncStorage.getItem(this.TOKEN_KEY);
+    } catch (error) {
+      console.error("Error getting token:", error);
+      return null;
+    }
+  }
+
+  // --- Lưu token ---
+  async saveToken(token) {
+    try {
+      if (token) {
+        await AsyncStorage.setItem(this.TOKEN_KEY, token);
+      } else {
+        await AsyncStorage.removeItem(this.TOKEN_KEY);
+      }
+      return true;
+    } catch (error) {
+      console.error("Error saving token:", error);
+      return false;
+    }
+  }
+  
+  // --- Xóa cả user và token khi đăng xuất ---
+  async clearAll() {
+      try {
+          await AsyncStorage.removeItem(this.USER_KEY);
+          await AsyncStorage.removeItem(this.TOKEN_KEY);
+          return true;
+      } catch(error) {
+          console.error("Error clearing all data:", error);
+          return false;
+      }
   }
 
   async updateUserInfo(name, email, phone) {

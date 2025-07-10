@@ -15,6 +15,7 @@ import ProfileScreen from "../profile/ProfileScreen";
 import PersonalInfoScreen from "../profile/PersonalInfoScreen";
 import ChangePasswordScreen from "../profile/ChangePasswordScreen";
 import AdminDashboardScreen from "../screens/AdminDashboardScreen";
+import VerifyEmailScreen from "../screens/VerifyEmailScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,12 +94,20 @@ const AppNavigator = () => {
         }}
       >
         {!user ? (
-          // Người dùng chưa đăng nhập
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            {/* // Người dùng chưa đăng nhập */}
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            {/* // chuyển qua màn hình xác thực email */}
+            <Stack.Screen
+              name="VerifyEmail"
+              component={VerifyEmailScreen}
+              options={{ title: 'Verify Email' }} // Hiện header cho màn hình này
+            />
+          </>
         ) : user.isAdmin ? (
           // Người dùng là Admin
           <>
