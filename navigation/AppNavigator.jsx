@@ -2,7 +2,7 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { useUser } from "../context/UserContext"; // Sử dụng hook useUser
+import { useUser } from "../context/UserContext";
 import { Feather } from "@expo/vector-icons";
 
 // Các màn hình
@@ -11,11 +11,12 @@ import CategoryScreen from "../screens/CategoryScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import CartScreen from "../screens/CartScreen";
 import LoginScreen from "../screens/LoginScreen";
+import VerifyEmailScreen from "../screens/VerifyEmailScreen";
 import ProfileScreen from "../profile/ProfileScreen";
 import PersonalInfoScreen from "../profile/PersonalInfoScreen";
 import ChangePasswordScreen from "../profile/ChangePasswordScreen";
 import AdminDashboardScreen from "../screens/AdminDashboardScreen";
-import VerifyEmailScreen from "../screens/VerifyEmailScreen";
+import AddressBookScreen from "../screens/AddressBookScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,20 +28,14 @@ const MainTabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-
-          if (route.name === "Home") {
-            iconName = "home";
-          } else if (route.name === "Cart") {
-            iconName = "shopping-cart";
-          } else if (route.name === "Profile") {
-            iconName = "user";
-          }
-
+          if (route.name === "Home") iconName = "home";
+          else if (route.name === "Cart") iconName = "shopping-cart";
+          else if (route.name === "Profile") iconName = "user";
           return <Feather name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#006782",
         tabBarInactiveTintColor: "gray",
-        headerShown: false, // Ẩn header của Tab Navigator
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -57,18 +52,13 @@ const AdminTabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-
-          if (route.name === "Dashboard") {
-            iconName = "grid";
-          } else if (route.name === "Profile") {
-            iconName = "user";
-          }
-
+          if (route.name === "Dashboard") iconName = "grid";
+          else if (route.name === "Profile") iconName = "user";
           return <Feather name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#006782",
         tabBarInactiveTintColor: "gray",
-        headerShown: false, // Ẩn header của Tab Navigator
+        headerShown: false,
       })}
     >
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
@@ -78,68 +68,41 @@ const AdminTabs = () => {
 };
 
 const AppNavigator = () => {
-  const { user } = useUser(); // Lấy trạng thái người dùng từ context
+  const { user } = useUser();
 
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: {
-            backgroundColor: "#006782",
-          },
+          headerStyle: { backgroundColor: "#006782" },
           headerTintColor: "#fff",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
+          headerTitleStyle: { fontWeight: "bold" },
         }}
       >
         {!user ? (
+          // Người dùng chưa đăng nhập
           <>
-            {/* // Người dùng chưa đăng nhập */}
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            {/* // chuyển qua màn hình xác thực email */}
-            <Stack.Screen
-              name="VerifyEmail"
-              component={VerifyEmailScreen}
-              options={{ title: 'Verify Email' }} // Hiện header cho màn hình này
-            />
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: 'Verify Email' }} />
           </>
         ) : user.isAdmin ? (
           // Người dùng là Admin
           <>
-            <Stack.Screen
-              name="AdminMain"
-              component={AdminTabs}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-            <Stack.Screen
-              name="ChangePassword"
-              component={ChangePasswordScreen}
-            />
+            <Stack.Screen name="AdminMain" component={AdminTabs} options={{ headerShown: false }} />
+            <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Personal Info' }} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+            {/* THÊM ADDRESS BOOK VÀO STACK CỦA ADMIN */}
+            <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />
           </>
         ) : (
           // Người dùng thông thường
           <>
-            <Stack.Screen
-              name="Main"
-              component={MainTabs}
-              options={{ headerShown: false }}
-            />
+            <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
             <Stack.Screen name="Category" component={CategoryScreen} />
-            <Stack.Screen
-              name="ProductDetail"
-              component={ProductDetailScreen}
-            />
-            <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-            <Stack.Screen
-              name="ChangePassword"
-              component={ChangePasswordScreen}
-            />
+            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+            <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Personal Info' }} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+            <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />
           </>
         )}
       </Stack.Navigator>

@@ -161,6 +161,17 @@ const ProfileScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.menuItem}
+          onPress={() => navigation.navigate("AddressBook")}
+        >
+          <View style={styles.iconContainer}>
+            <Feather name="map-pin" size={20} color={colors.onPrimaryContainer} />
+          </View>
+          <Text style={styles.menuItemText}>Address Book</Text>
+          <Feather name="chevron-right" size={20} style={styles.chevron} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
           onPress={() => navigation.navigate("ChangePassword")}
         >
           <View style={styles.iconContainer}>

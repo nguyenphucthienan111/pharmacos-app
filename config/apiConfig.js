@@ -11,4 +11,13 @@ export const ApiEndpoints = {
         GOOGLE_LOGIN: `${API_BASE_URL}/auth/google-login`,
         VERIFY_EMAIL: (token) => `${API_BASE_URL}/auth/verify-email?token=${token}`,
     },
+    CUSTOMER: {
+        GET_PROFILE: `${API_BASE_URL}/customers/profile`,
+        UPDATE_PROFILE: `${API_BASE_URL}/customers/profile`,
+        GET_ADDRESSES: `${API_BASE_URL}/customers/addresses`,
+        ADD_ADDRESS: `${API_BASE_URL}/customers/addresses`,
+        UPDATE_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}`,
+        DELETE_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}`,
+        SET_DEFAULT_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}/default`,
+    },
 };

@@ -7,149 +7,84 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "../components/WebCompatUI";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 
-const PersonalInfoScreen = ({ navigation }) => {
-  const { user, updateUserInfo } = useUser();
+// Styles được tạo bởi một hàm để có thể truy cập theme
+const createStyles = (colors, typography) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  title: { fontSize: typography.fontSize.large, fontWeight: typography.fontWeight.bold, color: colors.onSurfaceVariant },
+  editButton: { flexDirection: 'row', alignItems: 'center' },
+  editButtonText: { fontSize: typography.fontSize.medium, color: colors.primary, marginLeft: 4 },
+  formGroup: { marginBottom: 20 },
+  label: { fontSize: typography.fontSize.small, color: colors.onSurfaceVariant, marginBottom: 8 },
+  input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceVariant, borderRadius: 8, padding: 12, fontSize: typography.fontSize.medium, color: colors.onSurfaceVariant },
+  inputDisabled: { backgroundColor: colors.surfaceVariant + '40', color: colors.onSurfaceVariant + '80' },
+  buttonContainer: { marginTop: 24 },
+  saveButton: { backgroundColor: colors.primary, borderRadius: 8, padding: 16, alignItems: 'center' },
+  saveButtonText: { color: "#FFFFFF", fontSize: typography.fontSize.medium, fontWeight: '500' },
+  cancelButton: { marginTop: 12, borderRadius: 8, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceVariant },
+  cancelButtonText: { color: colors.onSurfaceVariant, fontSize: typography.fontSize.medium }
+});
+
+// Component con cho ô nhập liệu
+const InfoInput = ({ label, value, onChangeText, editable, ...props }) => {
   const { colors, typography } = useTheme();
+  const styles = createStyles(colors, typography);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  return (
+    <View style={styles.formGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={[styles.input, !editable && styles.inputDisabled]}
+        value={value}
+        onChangeText={onChangeText}
+        editable={editable}
+        placeholderTextColor={colors.onSurfaceVariant + '80'}
+        {...props}
+      />
+    </View>
+  );
+};
+
+const PersonalInfoScreen = ({ navigation }) => {
+  const { user, fetchUserProfile, updateUserProfile, loading: contextLoading } = useUser();
+  const { colors, typography } = useTheme();
+  const styles = createStyles(colors, typography);
+
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({ name: "", email: "", phone: "" });
+  const [profileData, setProfileData] = useState(user?.profile || {});
 
+  // Tải dữ liệu profile mới nhất khi màn hình được mở
   useEffect(() => {
-    // Initialize form with user data
-    setName(user.name);
-    setEmail(user.email);
-    setPhone(user.phone);
+    const loadProfile = async () => {
+      const latestUser = await fetchUserProfile();
+      if (latestUser) {
+        setProfileData(latestUser.profile);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  // Cập nhật state nội bộ khi user context thay đổi
+  useEffect(() => {
+    setProfileData(user?.profile || {});
   }, [user]);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    content: {
-      padding: 20,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    title: {
-      fontSize: typography.fontSize.large,
-      fontWeight: typography.fontWeight.bold,
-      color: colors.onSurfaceVariant,
-    },
-    editButton: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    editButtonText: {
-      fontSize: typography.fontSize.medium,
-      color: colors.primary,
-      marginLeft: 4,
-    },
-    formGroup: {
-      marginBottom: 20,
-    },
-    label: {
-      fontSize: typography.fontSize.small,
-      color: colors.onSurfaceVariant,
-      marginBottom: 8,
-    },
-    input: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.surfaceVariant,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: typography.fontSize.medium,
-      color: colors.onSurfaceVariant,
-    },
-    inputDisabled: {
-      backgroundColor: colors.surfaceVariant,
-      opacity: 0.7,
-    },
-    errorText: {
-      color: colors.error,
-      fontSize: typography.fontSize.small,
-      marginTop: 4,
-    },
-    buttonContainer: {
-      marginTop: 24,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-      borderRadius: 8,
-      padding: 16,
-      alignItems: "center",
-    },
-    saveButtonText: {
-      color: colors.onPrimary || "#FFFFFF",
-      fontSize: typography.fontSize.medium,
-      fontWeight: typography.fontWeight.medium,
-    },
-    cancelButton: {
-      marginTop: 12,
-      borderRadius: 8,
-      padding: 16,
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: colors.surfaceVariant,
-    },
-    cancelButtonText: {
-      color: colors.onSurfaceVariant,
-      fontSize: typography.fontSize.medium,
-    },
-  });
-
-  const validateForm = () => {
-    let isValid = true;
-    const newErrors = { name: "", email: "", phone: "" };
-
-    if (!name.trim()) {
-      newErrors.name = "Name is required";
-      isValid = false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!emailRegex.test(email)) {
-      newErrors.email = "Please enter a valid email";
-      isValid = false;
-    }
-
-    const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (!phone.trim()) {
-      newErrors.phone = "Phone number is required";
-      isValid = false;
-    } else if (!phoneRegex.test(phone)) {
-      newErrors.phone = "Please enter a valid phone number";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+  const handleInputChange = (field, value) => {
+    setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    // Loại bỏ các trường không cần thiết trước khi gửi
+    const { _id, accountId, createdAt, updatedAt, __v, ...dataToUpdate } = profileData;
 
-    setIsLoading(true);
-    const result = await updateUserInfo(name, email, phone);
-    setIsLoading(false);
-
+    const result = await updateUserProfile(dataToUpdate);
     if (result.success) {
       Alert.alert("Success", result.message);
       setIsEditing(false);
@@ -158,89 +93,49 @@ const PersonalInfoScreen = ({ navigation }) => {
     }
   };
 
+  const handleCancel = () => {
+    setProfileData(user?.profile || {}); // Hoàn tác thay đổi
+    setIsEditing(false);
+  }
+
+  // Định dạng ngày sinh để hiển thị
+  const formattedBirthday = profileData.dateOfBirth
+    ? new Date(profileData.dateOfBirth).toLocaleDateString('vi-VN') // Ví dụ: 02/07/2003
+    : "";
+
+  if (contextLoading && !user) {
+    return <ActivityIndicator style={{ flex: 1 }} size="large" color={colors.primary} />;
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Personal Information</Text>
           {!isEditing && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditing(true)}
-            >
+            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
               <Feather name="edit-2" size={16} color={colors.primary} />
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={name}
-            onChangeText={setName}
-            editable={isEditing}
-            placeholder="Enter your full name"
-          />
-          {errors.name ? (
-            <Text style={styles.errorText}>{errors.name}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Email Address</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={email}
-            onChangeText={setEmail}
-            editable={isEditing}
-            placeholder="Enter your email address"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          {errors.email ? (
-            <Text style={styles.errorText}>{errors.email}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Phone Number</Text>
-          <TextInput
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            value={phone}
-            onChangeText={setPhone}
-            editable={isEditing}
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-          />
-          {errors.phone ? (
-            <Text style={styles.errorText}>{errors.phone}</Text>
-          ) : null}
-        </View>
+        <InfoInput label="Full Name" value={profileData.name || ''} onChangeText={val => handleInputChange('name', val)} editable={isEditing} />
+        <InfoInput label="Email Address" value={profileData.email || ''} editable={false} />
+        <InfoInput label="Phone Number" value={profileData.phone || ''} onChangeText={val => handleInputChange('phone', val)} editable={isEditing} keyboardType="phone-pad" />
+        <InfoInput label="Gender" value={profileData.gender || ''} onChangeText={val => handleInputChange('gender', val)} editable={isEditing} />
+        <InfoInput label="Birthday" value={formattedBirthday} editable={false} />
+        {/* <InfoInput label="Address" value={profileData.address || ''} onChangeText={val => handleInputChange('address', val)} editable={isEditing} />
+        <InfoInput label="City" value={profileData.city || ''} onChangeText={val => handleInputChange('city', val)} editable={isEditing} />
+        <InfoInput label="District" value={profileData.district || ''} onChangeText={val => handleInputChange('district', val)} editable={isEditing} />
+        <InfoInput label="Ward" value={profileData.ward || ''} onChangeText={val => handleInputChange('ward', val)} editable={isEditing} /> */}
 
         {isEditing && (
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
-              <Text style={styles.saveButtonText}>
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={contextLoading}>
+              <Text style={styles.saveButtonText}>{contextLoading ? "Saving..." : "Save Changes"}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setIsEditing(false);
-                setName(user.name);
-                setEmail(user.email);
-                setPhone(user.phone);
-                setErrors({ name: "", email: "", phone: "" });
-              }}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={contextLoading}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
