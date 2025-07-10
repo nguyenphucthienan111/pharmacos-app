@@ -5,33 +5,23 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert, // Import Alert để tạo hộp thoại xác nhận
+  Alert,
 } from "../components/WebCompatUI";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 
 const ProfileScreen = ({ navigation }) => {
-  // Lấy user và hàm logout từ UserContext
   const { user, logout } = useUser();
   const { colors, typography } = useTheme();
 
-  // Hàm xử lý khi nhấn nút đăng xuất
   const handleLogout = () => {
     Alert.alert(
-      "Confirm Logout", // Tiêu đề
-      "Are you sure you want to log out?", // Nội dung
+      "Confirm Logout",
+      "Are you sure you want to log out?",
       [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Logout canceled"),
-          style: "cancel",
-        },
-        {
-          text: "Log Out",
-          onPress: () => logout(), // Gọi hàm logout từ context
-          style: "destructive",
-        },
+        { text: "Cancel", style: "cancel" },
+        { text: "Log Out", onPress: logout, style: "destructive" },
       ],
       { cancelable: false }
     );
@@ -46,11 +36,16 @@ const ProfileScreen = ({ navigation }) => {
       .toUpperCase();
   };
 
-  // Tránh lỗi nếu user chưa được tải xong
-  if (!user) {
-    return null;
+  // Nếu chưa có user hoặc profile, hiển thị màn hình trống để tránh lỗi
+  if (!user || !user.profile) {
+    return (
+      <View style={styles.container}>
+        {/* Có thể thêm một ActivityIndicator ở đây nếu muốn */}
+      </View>
+    );
   }
 
+  // --- CÁC STYLE GIỮ NGUYÊN ---
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -111,10 +106,10 @@ const ProfileScreen = ({ navigation }) => {
       elevation: 2,
     },
     logoutMenuItem: {
-      backgroundColor: colors.errorContainer, // Màu nền khác cho nút đăng xuất
+      backgroundColor: colors.errorContainer,
     },
     logoutMenuItemText: {
-      color: colors.onErrorContainer, // Màu chữ khác
+      color: colors.onErrorContainer,
     },
     menuItemText: {
       flex: 1,
@@ -138,14 +133,16 @@ const ProfileScreen = ({ navigation }) => {
     },
   });
 
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        {/* Truy cập thông tin qua user.profile */}
         <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>{getInitials(user.name)}</Text>
+          <Text style={styles.avatarText}>{getInitials(user.profile.name)}</Text>
         </View>
-        <Text style={styles.userName}>{user.name}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
+        <Text style={styles.userName}>{user.profile.name}</Text>
+        <Text style={styles.userEmail}>{user.profile.email}</Text>
       </View>
 
       <View style={styles.content}>
@@ -193,17 +190,12 @@ const ProfileScreen = ({ navigation }) => {
           <Feather name="chevron-right" size={20} style={styles.chevron} />
         </TouchableOpacity>
 
-        {/* --- NÚT ĐĂNG XUẤT ĐÃ HOÀN THIỆN --- */}
         <TouchableOpacity
           style={[styles.menuItem, styles.logoutMenuItem]}
           onPress={handleLogout}
         >
           <View style={[styles.iconContainer, styles.logoutIconContainer]}>
-            <Feather
-              name="log-out"
-              size={20}
-              color={colors.onError}
-            />
+            <Feather name="log-out" size={20} color={colors.onError} />
           </View>
           <Text style={[styles.menuItemText, styles.logoutMenuItemText]}>Log Out</Text>
         </TouchableOpacity>
