@@ -13,6 +13,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 
@@ -32,7 +33,7 @@ const DatePicker = ({ label, value, onChangeText, placeholder, maxLength, keyboa
   </View>
 );
 
-const LoginScreen = ({navigation}) => {
+const LoginScreen = ({ navigation }) => {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -194,27 +195,35 @@ const LoginScreen = ({navigation}) => {
   );
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Image source={{ uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80" }} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.appName}>PharmaCos</Text>
-        </View>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        {success ? <Text style={styles.successText}>{success}</Text> : null}
-        {isLoginMode ? renderLoginForm() : renderRegisterForm()}
-        <TouchableOpacity style={styles.switchModeContainer} onPress={toggleAuthMode}>
-          <Text style={styles.switchModeText}>
-            {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.logoContainer}>
+            <Image source={{ uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80" }} style={styles.logo} resizeMode="contain" />
+            <Text style={styles.appName}>PharmaCos</Text>
+          </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {success ? <Text style={styles.successText}>{success}</Text> : null}
+          {isLoginMode ? renderLoginForm() : renderRegisterForm()}
+          <TouchableOpacity style={styles.switchModeContainer} onPress={toggleAuthMode}>
+            <Text style={styles.switchModeText}>
+              {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
   scrollContainer: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 40 },
   logoContainer: { alignItems: "center", marginBottom: 30 },
   logo: { width: 100, height: 100, borderRadius: 50, marginBottom: 12 },

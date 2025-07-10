@@ -9,6 +9,8 @@ import {
   TextInput,
   Image,
   ActivityIndicator,
+  SafeAreaView,
+  Platform,
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
@@ -78,80 +80,82 @@ const HomeScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hello,</Text>
-          <Text style={styles.username}>User</Text>
-        </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Feather name="bell" size={24} color={colors.onSurfaceVariant} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Feather name="search" size={20} color={colors.onSurfaceVariant} style={styles.searchIcon} />
-          <TextInput style={styles.searchInput} placeholder="Search products..." value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSearch} />
-        </View>
-        <TouchableOpacity style={styles.scanButton} onPress={handleScanPress}>
-          <Feather name="camera" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Banner */}
-      <View style={styles.bannerContainer}>
-        <Image source={{ uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80" }} style={styles.bannerImage} resizeMode="cover" />
-        <View style={styles.bannerContent}>
-          <Text style={styles.bannerTitle}>Special Offer</Text>
-          <Text style={styles.bannerSubtitle}>20% OFF on all skincare products</Text>
-          <TouchableOpacity style={styles.bannerButton}>
-            <Text style={styles.bannerButtonText}>Shop Now</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hello,</Text>
+            <Text style={styles.username}>User</Text>
+          </View>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Feather name="bell" size={24} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Tab Selector */}
-      <View style={styles.tabSelectorContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'browse' && styles.activeTabButton]}
-          onPress={() => setActiveTab('browse')}>
-          <Text style={[styles.tabButtonText, activeTab === 'browse' && styles.activeTabButtonText]}>Browse Categories</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'featured' && styles.activeTabButton]}
-          onPress={() => setActiveTab('featured')}>
-          <Text style={[styles.tabButtonText, activeTab === 'featured' && styles.activeTabButtonText]}>Featured Products</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content based on active tab */}
-      {activeTab === 'browse' ? (
-        <View style={styles.productsGrid}>
-          {MOCK_CATEGORIES.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Feather name="search" size={20} color={colors.onSurfaceVariant} style={styles.searchIcon} />
+            <TextInput style={styles.searchInput} placeholder="Search products..." value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSearch} />
+          </View>
+          <TouchableOpacity style={styles.scanButton} onPress={handleScanPress}>
+            <Feather name="camera" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-      ) : (
-        <View style={styles.productsGrid}>
-          {MOCK_FEATURED_PRODUCTS.map((product) => (
-            // Cập nhật ProductCard để nhận `image` thay vì `imageUrl`
-            <ProductCard key={product.id} product={{ ...product, imageUrl: product.image }} />
-          ))}
-        </View>
-      )}
 
-      <View style={{ height: 20 }} />
-    </ScrollView>
+        {/* Banner */}
+        <View style={styles.bannerContainer}>
+          <Image source={{ uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80" }} style={styles.bannerImage} resizeMode="cover" />
+          <View style={styles.bannerContent}>
+            <Text style={styles.bannerTitle}>Special Offer</Text>
+            <Text style={styles.bannerSubtitle}>20% OFF on all skincare products</Text>
+            <TouchableOpacity style={styles.bannerButton}>
+              <Text style={styles.bannerButtonText}>Shop Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tab Selector */}
+        <View style={styles.tabSelectorContainer}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'browse' && styles.activeTabButton]}
+            onPress={() => setActiveTab('browse')}>
+            <Text style={[styles.tabButtonText, activeTab === 'browse' && styles.activeTabButtonText]}>Browse Categories</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === 'featured' && styles.activeTabButton]}
+            onPress={() => setActiveTab('featured')}>
+            <Text style={[styles.tabButtonText, activeTab === 'featured' && styles.activeTabButtonText]}>Featured Products</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content based on active tab */}
+        {activeTab === 'browse' ? (
+          <View style={styles.productsGrid}>
+            {MOCK_CATEGORIES.map((category) => (
+              <CategoryCard key={category.id} category={category} />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.productsGrid}>
+            {MOCK_FEATURED_PRODUCTS.map((product) => (
+              // Cập nhật ProductCard để nhận `image` thay vì `imageUrl`
+              <ProductCard key={product.id} product={{ ...product, imageUrl: product.image }} />
+            ))}
+          </View>
+        )}
+
+        <View style={{ height: 20 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -159,6 +163,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollContainer: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,

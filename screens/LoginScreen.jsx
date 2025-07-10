@@ -12,6 +12,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  SafeAreaView,
 } from "../components/WebCompatUI";
 
 // Import a web-compatible icon library
@@ -98,129 +99,134 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          {/* <Image
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.logoContainer}>
+            {/* <Image
             source={{
               uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80",
             }}
             style={styles.logo}
             resizeMode="contain"
           /> */}
-          <Text style={styles.appName}>PharmaCos</Text>
-          <Text style={styles.appTagline}>Your Health & Beauty Partner</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>
-            {isLoginMode ? "Welcome Back" : "Create Account"}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isLoginMode
-              ? "Sign in to access your account"
-              : "Register to start shopping"}
-          </Text>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <View style={styles.inputContainer}>
-            <Mail
-              size={20}
-              color={colors.onSurfaceVariant}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              type="email"
-              autoCapitalize="none"
-              placeholderTextColor={colors.onSurfaceVariant + "80"}
-            />
+            <Text style={styles.appName}>PharmaCos</Text>
+            <Text style={styles.appTagline}>Your Health & Beauty Partner</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Lock
-              size={20}
-              color={colors.onSurfaceVariant}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!isPasswordVisible}
-              autoCapitalize="none"
-              placeholderTextColor={colors.onSurfaceVariant + "80"}
-            />
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>
+              {isLoginMode ? "Welcome Back" : "Create Account"}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isLoginMode
+                ? "Sign in to access your account"
+                : "Register to start shopping"}
+            </Text>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <View style={styles.inputContainer}>
+              <Mail
+                size={20}
+                color={colors.onSurfaceVariant}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                type="email"
+                autoCapitalize="none"
+                placeholderTextColor={colors.onSurfaceVariant + "80"}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Lock
+                size={20}
+                color={colors.onSurfaceVariant}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!isPasswordVisible}
+                autoCapitalize="none"
+                placeholderTextColor={colors.onSurfaceVariant + "80"}
+              />
+              <TouchableOpacity
+                onPress={togglePasswordVisibility}
+                style={styles.visibilityIcon}
+              >
+                {isPasswordVisible ? (
+                  <EyeOff size={20} color={colors.onSurfaceVariant} />
+                ) : (
+                  <Eye size={20} color={colors.onSurfaceVariant} />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {isLoginMode && (
+              <TouchableOpacity style={styles.forgotPasswordContainer}>
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
-              onPress={togglePasswordVisibility}
-              style={styles.visibilityIcon}
+              style={styles.submitButton}
+              onPress={handleSubmit}
+              disabled={isLoading}
             >
-              {isPasswordVisible ? (
-                <EyeOff size={20} color={colors.onSurfaceVariant} />
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Eye size={20} color={colors.onSurfaceVariant} />
+                <Text style={styles.submitButtonText}>
+                  {isLoginMode ? "Sign In" : "Create Account"}
+                </Text>
               )}
             </TouchableOpacity>
-          </View>
 
-          {isLoginMode && (
-            <TouchableOpacity style={styles.forgotPasswordContainer}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.divider} />
+            </View>
+
+            <TouchableOpacity style={styles.socialButton}>
+              <Github size={20} color={colors.onSurfaceVariant} />
+              <Text style={styles.socialButtonText}>
+                {isLoginMode ? "Sign In" : "Sign Up"} with GitHub
+              </Text>
             </TouchableOpacity>
-          )}
+
+            <TouchableOpacity style={styles.socialButton}>
+              <Twitter size={20} color={colors.onSurfaceVariant} />
+              <Text style={styles.socialButtonText}>
+                {isLoginMode ? "Sign In" : "Sign Up"} with Twitter
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}
-            disabled={isLoading}
+            style={styles.switchModeContainer}
+            onPress={toggleAuthMode}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {isLoginMode ? "Sign In" : "Create Account"}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Github size={20} color={colors.onSurfaceVariant} />
-            <Text style={styles.socialButtonText}>
-              {isLoginMode ? "Sign In" : "Sign Up"} with GitHub
+            <Text style={styles.switchModeText}>
+              {isLoginMode
+                ? "Don't have an account? Sign Up"
+                : "Already have an account? Sign In"}
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Twitter size={20} color={colors.onSurfaceVariant} />
-            <Text style={styles.socialButtonText}>
-              {isLoginMode ? "Sign In" : "Sign Up"} with Twitter
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.switchModeContainer}
-          onPress={toggleAuthMode}
-        >
-          <Text style={styles.switchModeText}>
-            {isLoginMode
-              ? "Don't have an account? Sign Up"
-              : "Already have an account? Sign In"}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

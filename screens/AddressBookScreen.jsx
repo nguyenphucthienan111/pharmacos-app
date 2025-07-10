@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ScrollView, ActivityIndicator, Alert, Switch
+    View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput,
+    ScrollView, ActivityIndicator, Alert, Switch, SafeAreaView, Platform
 } from '../components/WebCompatUI';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../theme/ThemeProvider';
@@ -160,7 +161,7 @@ const AddressBookScreen = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => { setEditingAddress(null); setFormVisible(true); }}>
                 <Feather name="plus" size={20} color="#fff" />
                 <Text style={styles.addButtonText}>Add New Address</Text>
@@ -183,12 +184,16 @@ const AddressBookScreen = () => {
                 address={editingAddress}
                 isLoading={loading}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa' },
+    container: {
+        flex: 1,
+        backgroundColor: '#f8f9fa',
+        paddingTop: Platform.OS === 'android' ? 8 : 0, // Add padding for Android
+    },
     addButton: { flexDirection: 'row', padding: 15, margin: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center', elevation: 3 },
     addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
     addressCard: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5 },

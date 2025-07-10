@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
+  Platform,
 } from "../components/WebCompatUI";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
@@ -15,8 +17,17 @@ import { Feather } from "@expo/vector-icons";
 
 // Styles được tạo bởi một hàm để có thể truy cập theme
 const createStyles = (colors, typography) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  content: {
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 10 : 20,
+  },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   title: { fontSize: typography.fontSize.large, fontWeight: typography.fontWeight.bold, color: colors.onSurfaceVariant },
   editButton: { flexDirection: 'row', alignItems: 'center' },
@@ -104,44 +115,50 @@ const PersonalInfoScreen = ({ navigation }) => {
     : "";
 
   if (contextLoading && !user) {
-    return <ActivityIndicator style={{ flex: 1 }} size="large" color={colors.primary} />;
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <ActivityIndicator style={{ flex: 1 }} size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Personal Information</Text>
-          {!isEditing && (
-            <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
-              <Feather name="edit-2" size={16} color={colors.primary} />
-              <Text style={styles.editButtonText}>Edit</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Personal Information</Text>
+            {!isEditing && (
+              <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+                <Feather name="edit-2" size={16} color={colors.primary} />
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <InfoInput label="Full Name" value={profileData.name || ''} onChangeText={val => handleInputChange('name', val)} editable={isEditing} />
+          <InfoInput label="Email Address" value={profileData.email || ''} editable={false} />
+          <InfoInput label="Phone Number" value={profileData.phone || ''} onChangeText={val => handleInputChange('phone', val)} editable={isEditing} keyboardType="phone-pad" />
+          <InfoInput label="Gender" value={profileData.gender || ''} onChangeText={val => handleInputChange('gender', val)} editable={isEditing} />
+          <InfoInput label="Birthday" value={formattedBirthday} editable={false} />
+          {/* <InfoInput label="Address" value={profileData.address || ''} onChangeText={val => handleInputChange('address', val)} editable={isEditing} />
+          <InfoInput label="City" value={profileData.city || ''} onChangeText={val => handleInputChange('city', val)} editable={isEditing} />
+          <InfoInput label="District" value={profileData.district || ''} onChangeText={val => handleInputChange('district', val)} editable={isEditing} />
+          <InfoInput label="Ward" value={profileData.ward || ''} onChangeText={val => handleInputChange('ward', val)} editable={isEditing} /> */}
+
+          {isEditing && (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={contextLoading}>
+                <Text style={styles.saveButtonText}>{contextLoading ? "Saving..." : "Save Changes"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={contextLoading}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
-
-        <InfoInput label="Full Name" value={profileData.name || ''} onChangeText={val => handleInputChange('name', val)} editable={isEditing} />
-        <InfoInput label="Email Address" value={profileData.email || ''} editable={false} />
-        <InfoInput label="Phone Number" value={profileData.phone || ''} onChangeText={val => handleInputChange('phone', val)} editable={isEditing} keyboardType="phone-pad" />
-        <InfoInput label="Gender" value={profileData.gender || ''} onChangeText={val => handleInputChange('gender', val)} editable={isEditing} />
-        <InfoInput label="Birthday" value={formattedBirthday} editable={false} />
-        {/* <InfoInput label="Address" value={profileData.address || ''} onChangeText={val => handleInputChange('address', val)} editable={isEditing} />
-        <InfoInput label="City" value={profileData.city || ''} onChangeText={val => handleInputChange('city', val)} editable={isEditing} />
-        <InfoInput label="District" value={profileData.district || ''} onChangeText={val => handleInputChange('district', val)} editable={isEditing} />
-        <InfoInput label="Ward" value={profileData.ward || ''} onChangeText={val => handleInputChange('ward', val)} editable={isEditing} /> */}
-
-        {isEditing && (
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={contextLoading}>
-              <Text style={styles.saveButtonText}>{contextLoading ? "Saving..." : "Save Changes"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={contextLoading}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

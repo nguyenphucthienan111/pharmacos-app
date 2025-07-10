@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  SafeAreaView,
+  Platform,
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
@@ -124,16 +126,16 @@ const ProductDetailScreen = ({ route, navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading product details...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!product) {
     return (
-      <View style={styles.errorContainer}>
+      <SafeAreaView style={styles.errorContainer}>
         <Feather name="alert-circle" size={48} color={colors.error} />
         <Text style={styles.errorText}>Product not found</Text>
         <TouchableOpacity
@@ -142,7 +144,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
         >
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -152,7 +154,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
       : null;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Product Image */}
         <Image
@@ -194,8 +196,8 @@ const ProductDetailScreen = ({ route, navigation }) => {
                     star <= Math.floor(product.rating)
                       ? "star"
                       : star <= product.rating
-                      ? "star"
-                      : "star"
+                        ? "star"
+                        : "star"
                   }
                   size={16}
                   color={
@@ -406,7 +408,7 @@ const ProductDetailScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -680,6 +682,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     padding: 16,
+    paddingBottom: Platform.OS === "ios" ? 24 : 16, // Extra padding for iOS devices with home indicator
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceVariant,

@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 
 // Các màn hình
@@ -22,60 +23,61 @@ import MyOrdersScreen from "../profile/MyOrdersScreen";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tabs cho người dùng thông thường
-const MainTabs = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === "Home") iconName = "home";
-          else if (route.name === "Cart") iconName = "shopping-cart";
-          else if (route.name === "Profile") iconName = "user";
-          return <Feather name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: "#006782",
-        tabBarInactiveTintColor: "gray",
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Cart" component={CartScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-};
-
-// Tabs cho quản trị viên
-const AdminTabs = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === "Dashboard") iconName = "grid";
-          else if (route.name === "Profile") iconName = "user";
-          return <Feather name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: "#006782",
-        tabBarInactiveTintColor: "gray",
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-};
-
 const AppNavigator = () => {
   const { user } = useUser();
+  const { colors } = useTheme();
+
+  // Tabs cho người dùng thông thường
+  const MainTabs = () => {
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === "Home") iconName = "home";
+            else if (route.name === "Cart") iconName = "shopping-cart";
+            else if (route.name === "Profile") iconName = "user";
+            return <Feather name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: "gray",
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Cart" component={CartScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
+      </Tab.Navigator>
+    );
+  };
+
+  // Tabs cho quản trị viên
+  const AdminTabs = () => {
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === "Dashboard") iconName = "grid";
+            else if (route.name === "Profile") iconName = "user";
+            return <Feather name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: "gray",
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
+      </Tab.Navigator>
+    );
+  };
 
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: "#006782" },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}

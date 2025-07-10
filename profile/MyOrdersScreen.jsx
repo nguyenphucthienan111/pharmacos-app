@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, ScrollView
+    View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
+    Alert, ScrollView, SafeAreaView, Platform
 } from '../components/WebCompatUI';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
@@ -104,8 +105,92 @@ const MyOrdersScreen = () => {
         );
     };
 
+    // Define styles inside the component
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: '#f5f5f5',
+            paddingTop: Platform.OS === 'android' ? 0 : 0, // Adjust if needed
+        },
+        tabContainer: {
+            backgroundColor: '#fff',
+            borderBottomWidth: 1,
+            borderBottomColor: '#eee',
+            paddingTop: Platform.OS === 'ios' ? 10 : 0, // Extra padding for iOS
+        },
+        tab: {
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            marginHorizontal: 4,
+            borderRadius: 8,
+        },
+        activeTab: {
+            backgroundColor: '#e6f7ff',
+            borderBottomWidth: 2,
+            borderBottomColor: '#006782',
+        },
+        tabText: { color: '#555', fontWeight: '500' },
+        activeTabText: { color: '#006782', fontWeight: 'bold' },
+        orderCard: {
+            backgroundColor: '#fff',
+            padding: 16,
+            borderRadius: 8,
+            marginBottom: 16,
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOpacity: 0.1,
+            shadowRadius: 5
+        },
+        orderHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#f0f0f0',
+            paddingBottom: 10,
+            marginBottom: 10
+        },
+        orderId: { fontSize: 16, fontWeight: 'bold' },
+        statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+        statusText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+        productItem: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingVertical: 6
+        },
+        productName: { flex: 1, color: '#444', marginRight: 10 },
+        productDetails: { color: '#666' },
+        orderFooter: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 10,
+            borderTopWidth: 1,
+            borderTopColor: '#f0f0f0',
+            paddingTop: 10
+        },
+        totalText: { fontWeight: 'bold', fontSize: 16 },
+        cancelButton: {
+            backgroundColor: '#ff4d4f',
+            paddingHorizontal: 15,
+            paddingVertical: 8,
+            borderRadius: 5
+        },
+        cancelButtonText: { color: '#fff', fontWeight: 'bold' },
+        emptyContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 50,
+        },
+        emptyText: {
+            fontSize: 16,
+            color: '#888'
+        },
+    });
+
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.tabContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 8 }}>
                     {ORDER_TABS.map(tab => (
@@ -133,87 +218,8 @@ const MyOrdersScreen = () => {
                     ListEmptyComponent={<View style={styles.emptyContainer}><Text style={styles.emptyText}>No orders in this category.</Text></View>}
                 />
             )}
-        </View>
+        </SafeAreaView>
     );
 };
-
-// Styles không thay đổi
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f5f5' },
-    tabContainer: {
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee'
-    },
-    tab: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        marginHorizontal: 4,
-        borderRadius: 8,
-    },
-    activeTab: {
-        backgroundColor: '#e6f7ff',
-        borderBottomWidth: 2,
-        borderBottomColor: '#006782',
-    },
-    tabText: { color: '#555', fontWeight: '500' },
-    activeTabText: { color: '#006782', fontWeight: 'bold' },
-    orderCard: {
-        backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 8,
-        marginBottom: 16,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 5
-    },
-    orderHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        paddingBottom: 10,
-        marginBottom: 10
-    },
-    orderId: { fontSize: 16, fontWeight: 'bold' },
-    statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-    statusText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-    productItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 6
-    },
-    productName: { flex: 1, color: '#444', marginRight: 10 },
-    productDetails: { color: '#666' },
-    orderFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 10,
-        borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
-        paddingTop: 10
-    },
-    totalText: { fontWeight: 'bold', fontSize: 16 },
-    cancelButton: {
-        backgroundColor: '#ff4d4f',
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 5
-    },
-    cancelButtonText: { color: '#fff', fontWeight: 'bold' },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#888'
-    },
-});
 
 export default MyOrdersScreen;
