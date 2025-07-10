@@ -4,43 +4,28 @@ import { User } from "../models/User";
 class UserRepository {
   constructor() {
     this.USER_KEY = "user_data";
-    // Initialize with default user for demo purposes
-    this.initializeUser();
-  }
-
-  async initializeUser() {
-    try {
-      const userData = await AsyncStorage.getItem(this.USER_KEY);
-      if (!userData) {
-        const defaultUser = new User(
-          "John Doe",
-          "john.doe@example.com",
-          "+1234567890",
-          "Password123"
-        );
-        await this.saveUser(defaultUser);
-      }
-    } catch (error) {
-      console.error("Error initializing user:", error);
-    }
+    // Xóa bỏ việc khởi tạo người dùng mặc định
   }
 
   async getUser() {
     try {
       const userData = await AsyncStorage.getItem(this.USER_KEY);
-      if (userData) {
-        return JSON.parse(userData);
-      }
-      return new User();
+      // Trả về null nếu không có người dùng nào được lưu trữ
+      return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error("Error getting user:", error);
-      return new User();
+      return null; // Trả về null khi có lỗi
     }
   }
 
   async saveUser(user) {
     try {
-      await AsyncStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      if (user) {
+        await AsyncStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      } else {
+        // Xóa thông tin người dùng khi đăng xuất
+        await AsyncStorage.removeItem(this.USER_KEY);
+      }
       return true;
     } catch (error) {
       console.error("Error saving user:", error);
@@ -51,6 +36,8 @@ class UserRepository {
   async updateUserInfo(name, email, phone) {
     try {
       const user = await this.getUser();
+      if (!user) return false; // Không cập nhật nếu không có người dùng
+
       user.name = name;
       user.email = email;
       user.phone = phone;
@@ -65,6 +52,10 @@ class UserRepository {
   async updatePassword(currentPassword, newPassword) {
     try {
       const user = await this.getUser();
+      if (!user) {
+        return { success: false, message: "No user is logged in." };
+      }
+
       if (user.password === currentPassword) {
         user.password = newPassword;
         await this.saveUser(user);
@@ -79,8 +70,6 @@ class UserRepository {
   }
 
   async validatePassword(password) {
-    // Password must be at least 8 characters, contain at least one uppercase letter,
-    // one lowercase letter, and one number
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return passwordRegex.test(password);
   }

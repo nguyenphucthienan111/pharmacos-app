@@ -1,11 +1,11 @@
-import React, { useContext } from "react";
+import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { UserContext } from "../context/UserContext";
+import { useUser } from "../context/UserContext"; // Sử dụng hook useUser
 import { Feather } from "@expo/vector-icons";
 
-// Screens
+// Các màn hình
 import HomeScreen from "../screens/HomeScreen";
 import CategoryScreen from "../screens/CategoryScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
@@ -19,6 +19,7 @@ import AdminDashboardScreen from "../screens/AdminDashboardScreen";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Tabs cho người dùng thông thường
 const MainTabs = () => {
   return (
     <Tab.Navigator
@@ -38,6 +39,7 @@ const MainTabs = () => {
         },
         tabBarActiveTintColor: "#006782",
         tabBarInactiveTintColor: "gray",
+        headerShown: false, // Ẩn header của Tab Navigator
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -47,6 +49,7 @@ const MainTabs = () => {
   );
 };
 
+// Tabs cho quản trị viên
 const AdminTabs = () => {
   return (
     <Tab.Navigator
@@ -64,6 +67,7 @@ const AdminTabs = () => {
         },
         tabBarActiveTintColor: "#006782",
         tabBarInactiveTintColor: "gray",
+        headerShown: false, // Ẩn header của Tab Navigator
       })}
     >
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
@@ -73,21 +77,10 @@ const AdminTabs = () => {
 };
 
 const AppNavigator = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser(); // Lấy trạng thái người dùng từ context
 
   return (
-    <NavigationContainer
-      onReady={() => {
-        if (process.env.NEXT_PUBLIC_TEMPO) {
-          TempoDevtools.onRouteChange();
-        }
-      }}
-      onStateChange={() => {
-        if (process.env.NEXT_PUBLIC_TEMPO) {
-          TempoDevtools.onRouteChange();
-        }
-      }}
-    >
+    <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -100,30 +93,19 @@ const AppNavigator = () => {
         }}
       >
         {!user ? (
-          <>
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Register"
-              component={LoginScreen}
-              initialParams={{ isRegisterMode: true }}
-              options={{ headerShown: false }}
-            />
-          </>
+          // Người dùng chưa đăng nhập
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
         ) : user.isAdmin ? (
+          // Người dùng là Admin
           <>
             <Stack.Screen
               name="AdminMain"
               component={AdminTabs}
               options={{ headerShown: false }}
-            />
-            <Stack.Screen name="Category" component={CategoryScreen} />
-            <Stack.Screen
-              name="ProductDetail"
-              component={ProductDetailScreen}
             />
             <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
             <Stack.Screen
@@ -132,6 +114,7 @@ const AppNavigator = () => {
             />
           </>
         ) : (
+          // Người dùng thông thường
           <>
             <Stack.Screen
               name="Main"

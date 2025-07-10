@@ -101,13 +101,13 @@ const LoginScreen = ({ navigation }) => {
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
-          <Image
+          {/* <Image
             source={{
               uri: "https://images.unsplash.com/photo-1563203369-26f2e4a5ccf7?w=800&q=80",
             }}
             style={styles.logo}
             resizeMode="contain"
-          />
+          /> */}
           <Text style={styles.appName}>PharmaCos</Text>
           <Text style={styles.appTagline}>Your Health & Beauty Partner</Text>
         </View>

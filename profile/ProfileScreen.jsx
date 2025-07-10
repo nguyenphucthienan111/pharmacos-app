@@ -4,16 +4,52 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   ScrollView,
+  Alert, // Import Alert để tạo hộp thoại xác nhận
 } from "../components/WebCompatUI";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 
 const ProfileScreen = ({ navigation }) => {
-  const { user } = useUser();
+  // Lấy user và hàm logout từ UserContext
+  const { user, logout } = useUser();
   const { colors, typography } = useTheme();
+
+  // Hàm xử lý khi nhấn nút đăng xuất
+  const handleLogout = () => {
+    Alert.alert(
+      "Confirm Logout", // Tiêu đề
+      "Are you sure you want to log out?", // Nội dung
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Logout canceled"),
+          style: "cancel",
+        },
+        {
+          text: "Log Out",
+          onPress: () => logout(), // Gọi hàm logout từ context
+          style: "destructive",
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  // Tránh lỗi nếu user chưa được tải xong
+  if (!user) {
+    return null;
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -74,6 +110,12 @@ const ProfileScreen = ({ navigation }) => {
       shadowRadius: 2,
       elevation: 2,
     },
+    logoutMenuItem: {
+      backgroundColor: colors.errorContainer, // Màu nền khác cho nút đăng xuất
+    },
+    logoutMenuItemText: {
+      color: colors.onErrorContainer, // Màu chữ khác
+    },
     menuItemText: {
       flex: 1,
       fontSize: typography.fontSize.medium,
@@ -88,18 +130,13 @@ const ProfileScreen = ({ navigation }) => {
       justifyContent: "center",
       alignItems: "center",
     },
+    logoutIconContainer: {
+      backgroundColor: colors.error,
+    },
     chevron: {
       color: colors.onSurfaceVariant,
     },
   });
-
-  const getInitials = (name) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -156,16 +193,19 @@ const ProfileScreen = ({ navigation }) => {
           <Feather name="chevron-right" size={20} style={styles.chevron} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.iconContainer}>
+        {/* --- NÚT ĐĂNG XUẤT ĐÃ HOÀN THIỆN --- */}
+        <TouchableOpacity
+          style={[styles.menuItem, styles.logoutMenuItem]}
+          onPress={handleLogout}
+        >
+          <View style={[styles.iconContainer, styles.logoutIconContainer]}>
             <Feather
               name="log-out"
               size={20}
-              color={colors.onPrimaryContainer}
+              color={colors.onError}
             />
           </View>
-          <Text style={styles.menuItemText}>Log Out</Text>
-          <Feather name="chevron-right" size={20} style={styles.chevron} />
+          <Text style={[styles.menuItemText, styles.logoutMenuItemText]}>Log Out</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
