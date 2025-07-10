@@ -18,6 +18,10 @@ export const ApiEndpoints = {
         ADD_ADDRESS: `${API_BASE_URL}/customers/addresses`,
         UPDATE_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}`,
         DELETE_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}`,
-        SET_DEFAULT_ADDRESS: (id) => `${API_BASE_URL}/customers/addresses/${id}/default`,
+        CHANGE_PASSWORD: `${API_BASE_URL}/customers/change-password`,
     },
+    ORDERS: {
+        GET_MY_ORDERS: `${API_BASE_URL}/orders/my-orders`,
+        CANCEL_ORDER: (id) => `${API_BASE_URL}/orders/${id}/cancel`,
+    }
 };

@@ -164,20 +164,35 @@ export const UserProvider = ({ children }) => {
   };
 
   const updatePassword = async (currentPassword, newPassword) => {
+    if (!token) return { success: false, message: 'Not authenticated' };
+
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      const result = await UserRepository.updatePassword(
-        currentPassword,
-        newPassword
-      );
-      if (result.success) {
-        await loadUser();
+      const response = await fetch(ApiEndpoints.CUSTOMER.CHANGE_PASSWORD, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to change password.');
       }
-      return result;
+
+      // Đăng xuất người dùng sau khi đổi mật khẩu thành công để họ đăng nhập lại
+      await logout();
+
+      return { success: true, message: 'Password changed successfully! Please log in again.' };
     } catch (err) {
-      setError("Failed to update password");
-      console.error(err);
-      return { success: false, message: "An error occurred" };
+      console.error("Change password error:", err);
+      setError(err.message);
+      return { success: false, message: err.message };
     } finally {
       setLoading(false);
     }
@@ -251,6 +266,38 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // --- CÁC HÀM MỚI ĐỂ QUẢN LÝ ĐƠN HÀNG ---
+
+  const fetchMyOrders = async () => {
+    if (!token) return [];
+    try {
+      const response = await fetch(ApiEndpoints.ORDERS.GET_MY_ORDERS, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error("Fetch orders error:", err);
+      return [];
+    }
+  };
+
+  const cancelOrder = async (orderId, reason) => {
+    if (!token) return { success: false, message: 'Not authenticated' };
+    try {
+      const response = await fetch(ApiEndpoints.ORDERS.CANCEL_ORDER(orderId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to cancel order');
+      return { success: true, message: 'Order cancelled successfully.' };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
 
   return (
     <UserContext.Provider
@@ -270,6 +317,8 @@ export const UserProvider = ({ children }) => {
         addAddress,
         updateAddress,
         deleteAddress,
+        fetchMyOrders,
+        cancelOrder,
       }}
     >
       {children}

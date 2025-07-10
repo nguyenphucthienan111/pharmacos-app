@@ -181,14 +181,14 @@ const ProfileScreen = ({ navigation }) => {
           <Feather name="chevron-right" size={20} style={styles.chevron} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("MyOrders")}>
           <View style={styles.iconContainer}>
-            <Feather name="bell" size={20} color={colors.onPrimaryContainer} />
+            <Feather name="shopping-cart" size={20} color={colors.onPrimaryContainer} />
           </View>
-          <Text style={styles.menuItemText}>Notifications</Text>
+          <Text style={styles.menuItemText}>My Orders</Text>
           <Feather name="chevron-right" size={20} style={styles.chevron} />
         </TouchableOpacity>
-
+{/* 
         <TouchableOpacity style={styles.menuItem}>
           <View style={styles.iconContainer}>
             <Feather
@@ -199,7 +199,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
           <Text style={styles.menuItemText}>Help & Support</Text>
           <Feather name="chevron-right" size={20} style={styles.chevron} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           style={[styles.menuItem, styles.logoutMenuItem]}
