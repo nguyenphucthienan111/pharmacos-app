@@ -299,6 +299,73 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // --- HÀM MỚI ĐỂ LẤY SẢN PHẨM ---
+  const fetchProducts = async () => {
+    // Không cần token cho việc xem sản phẩm công khai
+    try {
+      const response = await fetch(ApiEndpoints.PRODUCTS.GET_ALL);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+      const data = await response.json();
+      // API của bạn trả về dữ liệu trong data.data.products
+      return Array.isArray(data?.data?.products) ? data.data.products : [];
+    } catch (err) {
+      console.error("Fetch products error:", err);
+      return []; // Trả về mảng rỗng nếu có lỗi
+    }
+  };
+
+  const fetchProductById = async (productId) => {
+    try {
+      const response = await fetch(ApiEndpoints.PRODUCTS.GET_BY_ID(productId), {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Failed to fetch product details');
+      return await response.json();
+    } catch (err) {
+      console.error("Fetch product by ID error:", err);
+      return null;
+    }
+  };
+
+  const submitReview = async (productId, reviewData, reviewId = null) => {
+    const isUpdating = !!reviewId;
+    const url = isUpdating 
+      ? ApiEndpoints.PRODUCTS.UPDATE_REVIEW(productId, reviewId)
+      : ApiEndpoints.PRODUCTS.ADD_REVIEW(productId);
+    const method = isUpdating ? 'PUT' : 'POST';
+
+    if (!token) return { success: false, message: 'You must be logged in.' };
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(reviewData),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || `Failed to ${isUpdating ? 'update' : 'add'} review.`);
+      return { success: true, data };
+    } catch(err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const toggleFavorite = async (productId) => {
+    try {
+      const response = await fetch(ApiEndpoints.FAVORITES.TOGGLE(productId), {
+        method: 'POST', // API này thường là POST hoặc PUT để toggle
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update favorites');
+      return { success: true, isFavorite: data.isFavorite };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -319,6 +386,10 @@ export const UserProvider = ({ children }) => {
         deleteAddress,
         fetchMyOrders,
         cancelOrder,
+        fetchProducts,
+        fetchProductById,
+        submitReview,
+        toggleFavorite,
       }}
     >
       {children}

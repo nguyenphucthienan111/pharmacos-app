@@ -16,6 +16,7 @@ import { Feather } from "@expo/vector-icons";
 import { colors, typography } from "../theme/theme";
 import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
+import { useUser } from "../context/UserContext";
 
 // Dữ liệu mock được cập nhật để khớp với cấu trúc của phiên bản web
 const MOCK_CATEGORIES = [
@@ -67,8 +68,24 @@ const MOCK_FEATURED_PRODUCTS = [
 
 const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("browse"); // 'browse' hoặc 'featured'
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("browse");
+  const [loading, setLoading] = useState(true); // State loading chung
+  const [products, setProducts] = useState([]); // State để lưu sản phẩm từ API
+  const { user } = useUser(); // Lấy thông tin người dùng nếu cần
+  const { fetchProducts } = useUser(); // Lấy hàm fetchProducts từ context
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const fetchedProducts = await fetchProducts();
+      setProducts(fetchedProducts);
+      setLoading(false);
+    };
+    loadData();
+  }, [fetchProducts]);
+
+  // Lấy 4 sản phẩm đầu tiên làm "Featured Products"
+  const featuredProducts = products.slice(0, 8);
 
   const handleSearch = () => {
     console.log("Searching for:", searchQuery);
@@ -93,7 +110,7 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello,</Text>
-            <Text style={styles.username}>User</Text>
+            <Text style={styles.username}>{user?.profile?.name || 'Guest'}</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <Feather name="bell" size={24} color={colors.onSurfaceVariant} />
@@ -138,7 +155,9 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Content based on active tab */}
-        {activeTab === 'browse' ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+        ) : activeTab === 'browse' ? (
           <View style={styles.productsGrid}>
             {MOCK_CATEGORIES.map((category) => (
               <CategoryCard key={category.id} category={category} />
@@ -146,9 +165,18 @@ const HomeScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.productsGrid}>
-            {MOCK_FEATURED_PRODUCTS.map((product) => (
-              // Cập nhật ProductCard để nhận `image` thay vì `imageUrl`
-              <ProductCard key={product.id} product={{ ...product, imageUrl: product.image }} />
+            {featuredProducts.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={{
+                  id: product._id,
+                  name: product.name,
+                  price: product.price,
+                  // Lấy ảnh chính hoặc ảnh đầu tiên
+                  imageUrl: product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url,
+                  discountPercentage: product.discount || 0,
+                }}
+              />
             ))}
           </View>
         )}
