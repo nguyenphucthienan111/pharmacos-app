@@ -17,6 +17,7 @@ import { colors, typography } from "../theme/theme";
 import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
 import { useUser } from "../context/UserContext";
+import { useTheme } from "../theme/ThemeProvider";
 
 // Dữ liệu mock được cập nhật để khớp với cấu trúc của phiên bản web
 const MOCK_CATEGORIES = [
@@ -67,12 +68,16 @@ const MOCK_FEATURED_PRODUCTS = [
 
 
 const HomeScreen = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { colors, typography } = useTheme();
   const [activeTab, setActiveTab] = useState("browse");
   const [loading, setLoading] = useState(true); // State loading chung
   const [products, setProducts] = useState([]); // State để lưu sản phẩm từ API
   const { user } = useUser(); // Lấy thông tin người dùng nếu cần
   const { fetchProducts } = useUser(); // Lấy hàm fetchProducts từ context
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -83,6 +88,55 @@ const HomeScreen = ({ navigation }) => {
     };
     loadData();
   }, [fetchProducts]);
+
+  // --- EFFECT ĐỂ XỬ LÝ TÌM KIẾM VỚI DEBOUNCE ---
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      if (searchQuery.trim().length > 1) {
+        setIsSearchLoading(true);
+        setIsDropdownVisible(true);
+        try {
+          // Sử dụng danh sách sản phẩm đã tải để tìm kiếm
+          const filtered = products.filter(p =>
+            p.name.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          setSearchResults(filtered);
+        } catch (error) {
+          console.error("Search failed:", error);
+          setSearchResults([]);
+        }
+        setIsSearchLoading(false);
+      } else {
+        setSearchResults([]);
+        setIsDropdownVisible(false);
+      }
+    }, 300); // Debounce 300ms
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery, products]);
+
+  // --- RENDER ITEM CHO DROPDOWN KẾT QUẢ TÌM KIẾM ---
+  const renderSearchResult = ({ item }) => (
+    <TouchableOpacity
+      style={styles.searchResultItem}
+      onPress={() => {
+        navigation.navigate("ProductDetail", { productId: item._id });
+        setIsDropdownVisible(false); // Ẩn dropdown sau khi chọn
+        setSearchQuery(""); // Xóa nội dung tìm kiếm
+      }}
+    >
+      <Image
+        source={{ uri: item.images?.find(img => img.isPrimary)?.url || item.images?.[0]?.url || 'https://via.placeholder.com/150' }}
+        style={styles.searchResultImage}
+      />
+      <View style={styles.searchResultInfo}>
+        <Text style={styles.searchResultName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.searchResultPrice}>{item.price.toLocaleString()} VND</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   // Lấy 6 sản phẩm đầu tiên làm "Featured Products"
   const featuredProducts = products.slice(0, 6);
@@ -106,8 +160,12 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Header */}
+      {/* The ScrollView now only contains the main page content */}
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Hello,</Text>
@@ -118,13 +176,19 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
+        {/* The Search Bar remains, but its results dropdown will be rendered outside */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Feather name="search" size={20} color={colors.onSurfaceVariant} style={styles.searchIcon} />
-            <TextInput style={styles.searchInput} placeholder="Search products..." value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSearch} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search products..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => { if (searchQuery.length > 1) setIsDropdownVisible(true) }}
+            />
           </View>
-          <TouchableOpacity style={styles.scanButton} onPress={handleScanPress} title="Search by image">
+          <TouchableOpacity style={styles.scanButton} onPress={handleScanPress}>
             <Feather name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -156,9 +220,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         {/* Content based on active tab */}
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
-        ) : activeTab === 'browse' ? (
+        {activeTab === 'browse' ? (
           <View style={styles.productsGrid}>
             {MOCK_CATEGORIES.map((category) => (
               <CategoryCard key={category.id} category={category} />
@@ -173,7 +235,6 @@ const HomeScreen = ({ navigation }) => {
                   id: product._id,
                   name: product.name,
                   price: product.price,
-                  // Lấy ảnh chính hoặc ảnh đầu tiên
                   imageUrl: product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url,
                   discountPercentage: product.discount || 0,
                 }}
@@ -181,9 +242,28 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         )}
-
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* --- SEARCH RESULTS DROPDOWN (MOVED HERE) --- */}
+      {/* This FlatList is now outside the ScrollView and positioned absolutely */}
+      {isDropdownVisible && (
+        <View style={styles.dropdownContainer}>
+          {isSearchLoading ? (
+            <ActivityIndicator style={{ paddingVertical: 20 }} color={colors.primary} />
+          ) : (
+            <FlatList
+              data={searchResults}
+              renderItem={renderSearchResult}
+              keyExtractor={(item) => item._id}
+              ListEmptyComponent={
+                searchQuery.length > 1 ? <Text style={styles.noResultsText}>No products found for "{searchQuery}"</Text> : null
+              }
+              style={styles.searchResultsList}
+            />
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -240,7 +320,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceVariant,
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginRight: 12,
+    marginRight: 8,
   },
   searchIcon: {
     marginRight: 8,
@@ -253,13 +333,15 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   scanButton: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
+    marginRight: 8,
+    marginTop: Platform.OS === 'web' ? 0 : 4, // Adjust for web compatibility
   },
   bannerContainer: {
     marginHorizontal: 16,
@@ -345,6 +427,84 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-around", // Canh đều các item
     paddingHorizontal: 8,
+  },
+  searchWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    zIndex: 10, // Đảm bảo dropdown hiển thị trên các thành phần khác
+  },
+  searchContainer: {
+    flexDirection: "row",
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginLeft: 16,
+    borderWidth: 1,
+    borderColor: '#DCE4E9',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  searchIcon: { marginRight: 8 },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 16,
+    color: '#40484C',
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: 120, // Vị trí ngay dưới thanh tìm kiếm
+    left: 16,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    maxHeight: 300,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    borderWidth: 1,
+    borderColor: '#DCE4E9',
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  searchResultImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  searchResultInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  searchResultName: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  searchResultPrice: {
+    fontSize: 14,
+    color: '#006782',
+    marginTop: 4,
+  },
+  noResultsText: {
+    padding: 20,
+    textAlign: 'center',
+    color: '#888',
   },
 });
 
