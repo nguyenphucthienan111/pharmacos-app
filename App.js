@@ -11,11 +11,11 @@ const App = () => {
       import("./navigation/WebAppNavigator").then((mod) => {
         setNavigator(() => mod.default);
       });
-      if (process.env.NEXT_PUBLIC_TEMPO) {
-        import("tempo-devtools").then(({ TempoDevtools }) => {
-          TempoDevtools.init();
-        });
-      }
+      // if (process.env.NEXT_PUBLIC_TEMPO) {
+      //   import("tempo-devtools").then(({ TempoDevtools }) => {
+      //     TempoDevtools.init();
+      //   });
+      // }
     } else {
       import("./navigation/AppNavigator").then((mod) => {
         setNavigator(() => mod.default);

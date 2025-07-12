@@ -84,15 +84,16 @@ const HomeScreen = ({ navigation }) => {
     loadData();
   }, [fetchProducts]);
 
-  // Lấy 4 sản phẩm đầu tiên làm "Featured Products"
-  const featuredProducts = products.slice(0, 8);
+  // Lấy 6 sản phẩm đầu tiên làm "Featured Products"
+  const featuredProducts = products.slice(0, 6);
 
   const handleSearch = () => {
     console.log("Searching for:", searchQuery);
   };
 
   const handleScanPress = () => {
-    console.log("Opening scanner");
+    // Điều hướng đến màn hình tìm kiếm AI mới
+    navigation.navigate("AIImageSearch");
   };
 
   if (loading) {
@@ -123,7 +124,7 @@ const HomeScreen = ({ navigation }) => {
             <Feather name="search" size={20} color={colors.onSurfaceVariant} style={styles.searchIcon} />
             <TextInput style={styles.searchInput} placeholder="Search products..." value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSearch} />
           </View>
-          <TouchableOpacity style={styles.scanButton} onPress={handleScanPress}>
+          <TouchableOpacity style={styles.scanButton} onPress={handleScanPress} title="Search by image">
             <Feather name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -252,12 +253,13 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   scanButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: 8,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 8,
   },
   bannerContainer: {
     marginHorizontal: 16,

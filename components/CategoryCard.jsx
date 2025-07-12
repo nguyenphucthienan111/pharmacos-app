@@ -16,13 +16,13 @@ const CategoryCard = ({ category }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
       <Image
-        source={{ uri: category.imageUrl }}
+        source={{ uri: category.image }}
         style={styles.image}
         resizeMode="cover"
       />
       <View style={styles.overlay}>
         <Text style={styles.name}>{category.name}</Text>
-        <Text style={styles.count}>{category.productCount} products</Text>
+        <Text style={styles.count}>{category.count} products</Text>
       </View>
     </TouchableOpacity>
   );
@@ -30,12 +30,13 @@ const CategoryCard = ({ category }) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: 140,
+    width: 160,
     height: 180,
     borderRadius: 8,
     overflow: "hidden",
     marginRight: 12,
     position: "relative",
+    marginBottom: 16,
   },
   image: {
     width: "100%",

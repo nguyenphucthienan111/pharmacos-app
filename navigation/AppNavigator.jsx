@@ -19,6 +19,7 @@ import ChangePasswordScreen from "../profile/ChangePasswordScreen";
 import AdminDashboardScreen from "../screens/AdminDashboardScreen";
 import AddressBookScreen from "../screens/AddressBookScreen";
 import MyOrdersScreen from "../profile/MyOrdersScreen";
+import AIImageSearchScreen from "../screens/AIImageSearchScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -92,6 +93,7 @@ const AppNavigator = () => {
           // Người dùng là Admin
           <>
             <Stack.Screen name="AdminMain" component={AdminTabs} options={{ headerShown: false }} />
+            <Stack.Screen name="AIImageSearch" component={AIImageSearchScreen} options={{ title: 'Search by Image' }} />
             <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Personal Info' }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
             <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />
@@ -103,6 +105,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
             <Stack.Screen name="Category" component={CategoryScreen} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+            <Stack.Screen name="AIImageSearch" component={AIImageSearchScreen} options={{ title: 'Search by Image' }} />
             <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Personal Info' }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
             <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />

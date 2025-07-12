@@ -34,5 +34,8 @@ export const ApiEndpoints = {
   FAVORITES: {
     GET_ALL: `${API_BASE_URL}/favorites`,
     TOGGLE: (productId) => `${API_BASE_URL}/favorites/${productId}`,
-  }
+  },
+  AI: {
+    SEARCH_BY_IMAGE: `${API_BASE_URL}/ai/search-by-image`,
+  },
 };
