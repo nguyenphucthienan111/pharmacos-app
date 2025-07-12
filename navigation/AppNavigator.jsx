@@ -20,6 +20,7 @@ import AdminDashboardScreen from "../screens/AdminDashboardScreen";
 import AddressBookScreen from "../screens/AddressBookScreen";
 import MyOrdersScreen from "../profile/MyOrdersScreen";
 import AIImageSearchScreen from "../screens/AIImageSearchScreen";
+import FavoritesScreen from "../screens/FavoritesScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,7 +37,7 @@ const AppNavigator = () => {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
             if (route.name === "Home") iconName = "home";
-            else if (route.name === "Cart") iconName = "shopping-cart";
+            else if (route.name === "Favorites") iconName = "heart";
             else if (route.name === "Profile") iconName = "user";
             return <Feather name={iconName} size={size} color={color} />;
           },
@@ -46,7 +47,7 @@ const AppNavigator = () => {
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Cart" component={CartScreen} />
+        <Tab.Screen name="Favorites" component={FavoritesScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     );

@@ -83,7 +83,7 @@ export const UserProvider = ({ children }) => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      return { success: true, message: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực." };
+      return { success: true, message: "Registration successful! Please check your email for verification." };
 
     } catch (err) {
       console.error("Registration failed:", err);
@@ -94,9 +94,8 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // --- HÀM MỚI: LẤY THÔNG TIN PROFILE TỪ SERVER ---
   const fetchUserProfile = async () => {
-    if (!token) return; // Không thực hiện nếu không có token
+    if (!token) return;
     setLoading(true);
     try {
       const response = await fetch(ApiEndpoints.CUSTOMER.GET_PROFILE, {
@@ -107,7 +106,6 @@ export const UserProvider = ({ children }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to fetch profile");
 
-      // Cập nhật lại user trong state và local storage
       const updatedUser = new User({ ...user, profile: data });
       await UserRepository.saveUser(updatedUser);
       setUser(updatedUser);
@@ -121,7 +119,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // --- HÀM MỚI: CẬP NHẬT PROFILE ---
   const updateUserProfile = async (profileData) => {
     if (!token) return { success: false, message: 'Not authenticated' };
 
@@ -136,13 +133,10 @@ export const UserProvider = ({ children }) => {
         body: JSON.stringify(profileData)
       });
 
-      // Đọc phản hồi dưới dạng văn bản trước
       const responseText = await response.text();
 
       if (!response.ok) {
-        // In ra nội dung lỗi HTML nếu có
         console.error("Server returned an error page:", responseText);
-        // Cố gắng parse JSON để lấy message, nếu không được thì hiển thị lỗi chung
         try {
           const errorJson = JSON.parse(responseText);
           throw new Error(errorJson.message || "Failed to update profile");
@@ -151,7 +145,6 @@ export const UserProvider = ({ children }) => {
         }
       }
 
-      // Cập nhật lại state sau khi lưu thành công
       await fetchUserProfile();
 
       return { success: true, message: 'Profile updated successfully!' };
@@ -185,7 +178,6 @@ export const UserProvider = ({ children }) => {
         throw new Error(data.message || 'Failed to change password.');
       }
 
-      // Đăng xuất người dùng sau khi đổi mật khẩu thành công để họ đăng nhập lại
       await logout();
 
       return { success: true, message: 'Password changed successfully! Please log in again.' };
@@ -202,7 +194,6 @@ export const UserProvider = ({ children }) => {
     return await UserRepository.validatePassword(password);
   };
 
-  // --- CÁC HÀM API ĐỊA CHỈ MỚI ---
   const fetchAddresses = async () => {
     if (!token) return [];
     try {
@@ -266,8 +257,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // --- CÁC HÀM MỚI ĐỂ QUẢN LÝ ĐƠN HÀNG ---
-
   const fetchMyOrders = async () => {
     if (!token) return [];
     try {
@@ -299,20 +288,17 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // --- HÀM MỚI ĐỂ LẤY SẢN PHẨM ---
   const fetchProducts = async () => {
-    // Không cần token cho việc xem sản phẩm công khai
     try {
       const response = await fetch(ApiEndpoints.PRODUCTS.GET_ALL);
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
       const data = await response.json();
-      // API của bạn trả về dữ liệu trong data.data.products
       return Array.isArray(data?.data?.products) ? data.data.products : [];
     } catch (err) {
       console.error("Fetch products error:", err);
-      return []; // Trả về mảng rỗng nếu có lỗi
+      return [];
     }
   };
 
@@ -331,7 +317,7 @@ export const UserProvider = ({ children }) => {
 
   const submitReview = async (productId, reviewData, reviewId = null) => {
     const isUpdating = !!reviewId;
-    const url = isUpdating 
+    const url = isUpdating
       ? ApiEndpoints.PRODUCTS.UPDATE_REVIEW(productId, reviewId)
       : ApiEndpoints.PRODUCTS.ADD_REVIEW(productId);
     const method = isUpdating ? 'PUT' : 'POST';
@@ -347,15 +333,16 @@ export const UserProvider = ({ children }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || `Failed to ${isUpdating ? 'update' : 'add'} review.`);
       return { success: true, data };
-    } catch(err) {
+    } catch (err) {
       return { success: false, message: err.message };
     }
   };
 
   const toggleFavorite = async (productId) => {
+    if (!token) return { success: false, message: 'You must be logged in to favorite items.' };
     try {
       const response = await fetch(ApiEndpoints.FAVORITES.TOGGLE(productId), {
-        method: 'POST', // API này thường là POST hoặc PUT để toggle
+        method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await response.json();
@@ -365,6 +352,54 @@ export const UserProvider = ({ children }) => {
       return { success: false, message: err.message };
     }
   }
+
+  const addFavorite = async (productId) => {
+    if (!token) return { success: false, message: 'You must be logged in to favorite items.' };
+    try {
+      const response = await fetch(ApiEndpoints.FAVORITES.ACTION(productId), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to add favorite');
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const removeFavorite = async (productId) => {
+    if (!token) return { success: false, message: 'You must be logged in to manage favorites.' };
+    try {
+      const response = await fetch(ApiEndpoints.FAVORITES.ACTION(productId), {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to remove favorite');
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const fetchFavorites = async () => {
+    if (!token) return [];
+    try {
+      const response = await fetch(ApiEndpoints.FAVORITES.GET_ALL, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch favorites');
+      const data = await response.json();
+      return data.data; // Assuming the API returns favorites in a `data` property
+    } catch (err) {
+      console.error("Fetch favorites error:", err);
+      return [];
+    }
+  };
+
 
   return (
     <UserContext.Provider
@@ -390,6 +425,9 @@ export const UserProvider = ({ children }) => {
         fetchProductById,
         submitReview,
         toggleFavorite,
+        fetchFavorites,
+        addFavorite,
+        removeFavorite,
       }}
     >
       {children}

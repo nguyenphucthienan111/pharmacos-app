@@ -1,9 +1,12 @@
+// components/ProductCard.jsx
+
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors, typography } from "../theme/theme";
+import { AntDesign } from '@expo/vector-icons';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onToggleFavorite }) => {
   const navigation = useNavigation();
 
   const handlePress = () => {
@@ -17,11 +20,30 @@ const ProductCard = ({ product }) => {
         style={styles.image}
         resizeMode="cover"
       />
+      {onToggleFavorite && (
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          onPress={(e) => {
+            e.stopPropagation(); // Ngăn sự kiện click lan ra component cha
+            onToggleFavorite(product.id);
+          }}
+        >
+          <AntDesign
+            name={product.isFavorite ? "heart" : "hearto"}
+            size={20}
+            color={product.isFavorite ? colors.error : "#FFFFFF"}
+          />
+        </TouchableOpacity>
+      )}
       <View style={styles.infoContainer}>
         <Text style={styles.name} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+
+        {product.price != null && (
+          <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+        )}
+
         {product.discountPercentage > 0 && (
           <View style={styles.discountContainer}>
             <Text style={styles.discount}>
@@ -81,6 +103,14 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.small,
     fontWeight: typography.fontWeight.bold,
     color: colors.error,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 15,
+    padding: 5,
   },
 });
 

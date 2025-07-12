@@ -69,7 +69,7 @@ const ReviewFormModal = ({ visible, onDismiss, onSubmit, initialReview, product,
 const ProductDetailScreen = ({ route }) => {
   const { productId } = route.params;
   const { colors } = useTheme();
-  const { user, fetchProductById, toggleFavorite, submitReview, deleteReview, addToCart } = useUser();
+  const { user, fetchProductById, toggleFavorite, submitReview, deleteReview, addToCart, addFavorite, removeFavorite, fetchFavorites } = useUser();
 
   const [product, setProduct] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
@@ -85,34 +85,59 @@ const ProductDetailScreen = ({ route }) => {
     useCallback(() => {
       const loadProductData = async () => {
         setLoading(true);
-        const result = await fetchProductById(productId);
-        if (result && result.data) {
-          const p = result.data.product;
-          setProduct({ ...p, images: p.images?.map(img => img.url) || [] });
-          setIsFavorite(p.isFavorite || false);
-          setSimilarProducts(result.data.similarProducts || []);
+        try {
+          // Gọi cả hai API cùng lúc để tăng hiệu suất
+          const [productResult, favoritesResult] = await Promise.all([
+            fetchProductById(productId),
+            user ? fetchFavorites() : Promise.resolve([]) // Chỉ gọi API yêu thích nếu người dùng đã đăng nhập
+          ]);
 
-          if (user && p.reviews) {
-            const foundReview = p.reviews.find(r => r.userId?._id === user.id);
-            setUserReview(foundReview || null);
+          if (productResult && productResult.data) {
+            const p = productResult.data.product;
+            setProduct({ ...p, images: p.images?.map(img => img.url) || [] });
+            setSimilarProducts(productResult.data.similarProducts || []);
+
+            // Kiểm tra xem sản phẩm hiện tại có trong danh sách yêu thích không
+            if (Array.isArray(favoritesResult) && favoritesResult.length > 0) {
+              const isFav = favoritesResult.some(fav => fav.product?._id === productId);
+              setIsFavorite(isFav);
+            } else {
+              setIsFavorite(false);
+            }
+
+            if (user && p.reviews) {
+              const foundReview = p.reviews.find(r => r.userId?._id === user.id);
+              setUserReview(foundReview || null);
+            }
+          } else {
+            Alert.alert("Error", "Could not load product details.");
           }
-        } else {
-          Alert.alert("Error", "Could not load product details.");
+        } catch (error) {
+          console.error("Failed to load product and favorite data:", error);
+          Alert.alert("Error", "An error occurred while loading data.");
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       };
 
       loadProductData();
       // Trả về một hàm cleanup rỗng nếu không cần
       return () => { };
-    }, [productId, user]) // Dependency là productId và user
+    }, [productId, user, fetchProductById, fetchFavorites]) // Dependency là productId và user
   );
 
   const handleToggleFavorite = async () => {
     if (!user) return Alert.alert("Login Required", "Please log in to manage your favorites.");
+
+    const action = isFavorite ? removeFavorite : addFavorite;
     const originalStatus = isFavorite;
+
+    // Cập nhật giao diện ngay lập tức
     setIsFavorite(!originalStatus);
-    const result = await toggleFavorite(productId);
+
+    const result = await action(productId);
+
+    // Hoàn tác nếu API thất bại
     if (!result.success) {
       setIsFavorite(originalStatus);
       Alert.alert("Error", result.message || "Failed to update favorites.");
@@ -171,8 +196,6 @@ const ProductDetailScreen = ({ route }) => {
     return <View style={styles.centerScreen}><Text>Product not found.</Text></View>;
   }
 
-  const discountedPrice = product.discount ? product.price * (1 - product.discount / 100) : null;
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'ingredients':
@@ -218,6 +241,19 @@ const ProductDetailScreen = ({ route }) => {
     }
   }
 
+  if (loading || !product) { // Thêm điều kiện !product để đảm bảo không render khi chưa có dữ liệu
+    return (
+      <View style={styles.centerScreen}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Đảm bảo discountedPrice chỉ được tính khi product.price có giá trị
+  const discountedPrice = product.price != null && product.discount
+    ? product.price * (1 - product.discount / 100)
+    : null;
+
   return (
     <>
       <ScrollView style={styles.container}>
@@ -232,7 +268,7 @@ const ProductDetailScreen = ({ route }) => {
         <View style={styles.infoContainer}>
           <Text style={styles.brand}>{product.brand}</Text>
           <Text style={styles.productName}>{product.name}</Text>
-          {product.rating > 0 && (
+          {typeof product.rating === 'number' && product.rating > 0 && (
             <View style={styles.ratingContainer}>
               <StarRating rating={product.rating} size={20} disabled />
               <Text style={styles.ratingText}>{product.rating.toFixed(1)} ({product.reviews?.length || 0} reviews)</Text>
@@ -267,7 +303,11 @@ const ProductDetailScreen = ({ route }) => {
       </ScrollView>
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
-          <AntDesign name={isFavorite ? "heart" : "hearto"} size={24} color={isFavorite ? colors.error : colors.onSurfaceVariant} />
+          <AntDesign
+            name={isFavorite ? "heart" : "hearto"}
+            size={24}
+            color={isFavorite ? colors.error : colors.onSurfaceVariant}
+          />
         </TouchableOpacity>
         <View style={styles.quantitySelector}>
           <TouchableOpacity onPress={() => setQuantity(q => Math.max(1, q - 1))}><Text style={styles.quantityButton}>-</Text></TouchableOpacity>
