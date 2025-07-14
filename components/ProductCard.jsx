@@ -6,6 +6,17 @@ import { useNavigation } from "@react-navigation/native";
 import { colors, typography } from "../theme/theme";
 import { AntDesign } from '@expo/vector-icons';
 
+// Helper lấy ảnh ưu tiên
+const getProductImage = (product) => {
+  if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]?.url) {
+    return product.images[0].url;
+  }
+  if (product.imageUrl) {
+    return product.imageUrl;
+  }
+  return 'https://via.placeholder.com/150';
+};
+
 const ProductCard = ({ product, onToggleFavorite }) => {
   const navigation = useNavigation();
 
@@ -16,9 +27,9 @@ const ProductCard = ({ product, onToggleFavorite }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
       <Image
-        source={{ uri: product.imageUrl }}
+        source={{ uri: getProductImage(product) }}
         style={styles.image}
-        resizeMode="cover"
+        resizeMode="contain"
       />
       {onToggleFavorite && (
         <TouchableOpacity
@@ -41,7 +52,7 @@ const ProductCard = ({ product, onToggleFavorite }) => {
         </Text>
 
         {product.price != null && (
-          <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+          <Text style={styles.price}>{product.price.toLocaleString()} VND</Text>
         )}
 
         {product.discountPercentage > 0 && (
@@ -72,6 +83,9 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 150,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
   infoContainer: {
     padding: 12,
