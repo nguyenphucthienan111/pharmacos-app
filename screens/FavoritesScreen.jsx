@@ -10,6 +10,7 @@ import {
     ActivityIndicator,
     SafeAreaView,
     Platform,
+    Alert,
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
@@ -22,7 +23,7 @@ const FavoritesScreen = ({ navigation }) => {
     const { colors, typography } = useTheme();
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user, fetchFavorites, toggleFavorite, removeFavorite } = useContext(UserContext);
+    const { user, fetchFavorites, removeFavorite } = useContext(UserContext);
 
     const loadFavorites = async () => {
         if (!user) {
@@ -31,7 +32,8 @@ const FavoritesScreen = ({ navigation }) => {
         }
         setLoading(true);
         const favoriteProducts = await fetchFavorites();
-        setFavorites(favoriteProducts);
+        const validFavorites = favoriteProducts.filter(item => item.product);
+        setFavorites(validFavorites);
         setLoading(false);
     };
 
@@ -41,16 +43,21 @@ const FavoritesScreen = ({ navigation }) => {
         }, [user])
     );
 
-    const handleFavoriteToggle = async (productId) => {
-        await toggleFavorite(productId);
-        // Tải lại danh sách yêu thích sau khi thay đổi
-        await loadFavorites();
-    };
-
     const handleRemoveFavorite = async (productId) => {
-        await removeFavorite(productId);
-        // Tải lại danh sách yêu thích sau khi xóa
-        await loadFavorites();
+        const originalFavorites = [...favorites];
+        // Cập nhật giao diện ngay lập tức
+        setFavorites(currentFavorites =>
+            currentFavorites.filter(fav => fav.product._id !== productId)
+        );
+
+        // Gọi API để xóa
+        const result = await removeFavorite(productId);
+
+        // Nếu API thất bại, hoàn tác thay đổi và thông báo lỗi
+        if (!result.success) {
+            setFavorites(originalFavorites);
+            Alert.alert("Error", "Could not remove from favorites. Please try again.");
+        }
     };
 
     const styles = createStyles(colors, typography);
@@ -115,7 +122,7 @@ const FavoritesScreen = ({ navigation }) => {
                         onToggleFavorite={() => handleRemoveFavorite(item.product._id)}
                     />
                 )}
-                keyExtractor={(item) => item.product._id.toString()}
+                keyExtractor={(item) => item.product?._id?.toString() || item._id}
                 numColumns={2}
                 columnWrapperStyle={styles.productsRow}
                 contentContainerStyle={styles.productsContainer}

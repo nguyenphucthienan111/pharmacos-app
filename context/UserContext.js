@@ -393,6 +393,7 @@ export const UserProvider = ({ children }) => {
       });
       if (!response.ok) throw new Error('Failed to fetch favorites');
       const data = await response.json();
+      // console.log("Fetched favorites:", data);
       return data.data; // Assuming the API returns favorites in a `data` property
     } catch (err) {
       console.error("Fetch favorites error:", err);
