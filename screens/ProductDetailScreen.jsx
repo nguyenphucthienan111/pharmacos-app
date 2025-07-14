@@ -321,7 +321,7 @@ const ProductDetailScreen = ({ route }) => {
         />
         <View style={{ height: 100 }} />
       </ScrollView>
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { marginBottom: 20 }]}>
         <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
           <AntDesign
             name={isFavorite ? "heart" : "hearto"}
