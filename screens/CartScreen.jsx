@@ -12,66 +12,28 @@ import {
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
-import { UserContext } from "../context/UserContext";
+import { useUser } from "../context/UserContext";
 
-// Mock data
-const MOCK_CART_ITEMS = [
-  {
-    id: 1,
-    productId: 1,
-    name: "Advanced Pain Relief Gel",
-    price: 12.99,
-    quantity: 1,
-    imageUrl: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&q=80",
-  },
-  {
-    id: 2,
-    productId: 2,
-    name: "Vitamin C Serum",
-    price: 24.99,
-    quantity: 2,
-    imageUrl: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=800&q=80",
-  },
-];
+const formatVND = (amount) => amount.toLocaleString('vi-VN') + ' VND';
 
 const CartScreen = ({ navigation }) => {
   const { colors, typography } = useTheme();
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [subTotal, setSubTotal] = useState(0);
-  const { user } = useContext(UserContext);
+  const { cartItems, loading, updateCartItemQuantity, removeCartItem } = useUser();
 
-  // Simulate fetching cart items
-  useEffect(() => {
-    setTimeout(() => {
-      setCartItems(MOCK_CART_ITEMS);
-      calculateTotal(MOCK_CART_ITEMS);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const calculateTotal = (items) => {
-    const total = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-    setSubTotal(total);
-  };
-
-  const handleQuantityChange = (id, change) => {
-    const updatedItems = cartItems.map(item => {
-      if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + change);
-        return { ...item, quantity: newQuantity };
-      }
-      return item;
-    });
-    setCartItems(updatedItems);
-    calculateTotal(updatedItems);
+  const handleQuantityChange = (id, currentQuantity, change) => {
+    const newQuantity = currentQuantity + change;
+    if (newQuantity > 0) {
+      updateCartItemQuantity(id, newQuantity);
+    } else {
+      removeCartItem(id);
+    }
   };
 
   const handleRemoveItem = (id) => {
-    const updatedItems = cartItems.filter(item => item.id !== id);
-    setCartItems(updatedItems);
-    calculateTotal(updatedItems);
+    removeCartItem(id);
   };
+
+  const subTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   if (loading) {
     return (
@@ -100,36 +62,33 @@ const CartScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollContainer}>
-        {/* Cart items list */}
         <View style={styles.itemsContainer}>
           {cartItems.map((item) => (
             <View key={item.id} style={[styles.cartItem, { backgroundColor: colors.surface }]}>
-              <Image source={{ uri: item.imageUrl }} style={styles.itemImage} resizeMode="cover" />
+              <Image source={{ uri: item.image }} style={styles.itemImage} resizeMode="cover" />
               <View style={styles.itemDetails}>
                 <Text style={[styles.itemName, { color: colors.onSurfaceVariant }]}>{item.name}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={[styles.itemPrice, { color: colors.primary }]}>${item.price.toFixed(2)}</Text>
+                  <Text style={[styles.itemPrice, { color: colors.primary }]}>{formatVND(item.price)}</Text>
                 </View>
                 <View style={styles.quantityControl}>
                   <TouchableOpacity
                     style={[styles.quantityButton, { backgroundColor: colors.surfaceVariant }]}
-                    onPress={() => handleQuantityChange(item.id, -1)}
+                    onPress={() => handleQuantityChange(item.id, item.quantity, -1)}
                   >
                     <Feather name="minus" size={16} color={colors.onSurfaceVariant} />
                   </TouchableOpacity>
                   <Text style={[styles.quantityText, { color: colors.onSurfaceVariant }]}>{item.quantity}</Text>
                   <TouchableOpacity
                     style={[styles.quantityButton, { backgroundColor: colors.surfaceVariant }]}
-                    onPress={() => handleQuantityChange(item.id, 1)}
+                    onPress={() => handleQuantityChange(item.id, item.quantity, 1)}
                   >
                     <Feather name="plus" size={16} color={colors.onSurfaceVariant} />
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={styles.itemActions}>
-                <Text style={[styles.itemTotal, { color: colors.primary }]}>
-                  ${(item.price * item.quantity).toFixed(2)}
-                </Text>
+                <Text style={[styles.itemTotal, { color: colors.primary }]}> {formatVND(item.price * item.quantity)} </Text>
                 <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={styles.removeButton}>
                   <Feather name="trash-2" size={20} color={colors.error} />
                 </TouchableOpacity>
@@ -138,32 +97,29 @@ const CartScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Pricing summary */}
         <View style={[styles.summaryContainer, { backgroundColor: colors.surface }]}>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Subtotal</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>${subTotal.toFixed(2)}</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(subTotal)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Shipping</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>$5.00</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(5000)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Tax</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>$3.24</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(3240)}</Text>
           </View>
           <View style={[styles.divider, { backgroundColor: colors.surfaceVariant }]} />
           <View style={styles.summaryRow}>
             <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total</Text>
-            <Text style={[styles.totalValue, { color: colors.primary }]}>${(subTotal + 5.00 + 3.24).toFixed(2)}</Text>
+            <Text style={[styles.totalValue, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
           </View>
         </View>
 
-        {/* Bottom spacing */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Bottom checkout bar */}
       <View style={[styles.checkoutBar, {
         backgroundColor: colors.surface,
         borderTopColor: colors.surfaceVariant,
@@ -171,7 +127,7 @@ const CartScreen = ({ navigation }) => {
       }]}>
         <View style={styles.totalSection}>
           <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total:</Text>
-          <Text style={[styles.totalAmount, { color: colors.primary }]}>${(subTotal + 5.00 + 3.24).toFixed(2)}</Text>
+          <Text style={[styles.totalAmount, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.checkoutButton, { backgroundColor: colors.primary }]}

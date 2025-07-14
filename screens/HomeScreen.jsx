@@ -18,18 +18,16 @@ import ProductCard from "../components/ProductCard";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 
-// XÓA HOÀN TOÀN MOCK_CATEGORIES, MOCK_FEATURED_PRODUCTS, VÀ CategoryCard
-
 const HomeScreen = ({ navigation }) => {
   const { colors, typography } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState([]);
-  const { user } = useUser();
+  const [products, setProducts] = useState([]); // <--- DÒNG BỊ THIẾU
   const { fetchProducts } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const { user, cartItems, addToCart } = useUser();
 
   useEffect(() => {
     const loadData = async () => {
@@ -106,8 +104,13 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.greeting}>Hello,</Text>
             <Text style={styles.username}>{user?.profile?.name || 'Guest'}</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Feather name="bell" size={24} color={colors.onSurfaceVariant} />
+          <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('Cart')}>
+            <Feather name="shopping-cart" size={24} color={colors.onSurfaceVariant} />
+            {cartItems.length > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartItems.reduce((sum, item) => sum + item.quantity, 0)}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
         <View style={styles.searchContainer}>
@@ -121,7 +124,7 @@ const HomeScreen = ({ navigation }) => {
               onFocus={() => { if (searchQuery.length > 1) setIsDropdownVisible(true) }}
             />
           </View>
-          <TouchableOpacity style={styles.scanButton} onPress={() => navigation.navigate("AIImageSearch") }>
+          <TouchableOpacity style={styles.scanButton} onPress={() => navigation.navigate("AIImageSearch")}>
             <Feather name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -180,7 +183,6 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-// XÓA style cho CategoryCard, tab selector, và các style không còn dùng nữa
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -213,13 +215,30 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.onSurfaceVariant,
   },
-  notificationButton: {
+  cartButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.surfaceVariant,
     justifyContent: "center",
     alignItems: "center",
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: "row",
