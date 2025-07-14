@@ -14,6 +14,8 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
 import { useUser } from "../context/UserContext";
 
+const formatVND = (amount) => amount.toLocaleString('vi-VN') + ' VND';
+
 const CartScreen = ({ navigation }) => {
   const { colors, typography } = useTheme();
   const { cartItems, loading, updateCartItemQuantity, removeCartItem } = useUser();
@@ -67,7 +69,7 @@ const CartScreen = ({ navigation }) => {
               <View style={styles.itemDetails}>
                 <Text style={[styles.itemName, { color: colors.onSurfaceVariant }]}>{item.name}</Text>
                 <View style={styles.priceContainer}>
-                  <Text style={[styles.itemPrice, { color: colors.primary }]}>${item.price.toFixed(2)}</Text>
+                  <Text style={[styles.itemPrice, { color: colors.primary }]}>{formatVND(item.price)}</Text>
                 </View>
                 <View style={styles.quantityControl}>
                   <TouchableOpacity
@@ -86,9 +88,7 @@ const CartScreen = ({ navigation }) => {
                 </View>
               </View>
               <View style={styles.itemActions}>
-                <Text style={[styles.itemTotal, { color: colors.primary }]}>
-                  ${(item.price * item.quantity).toFixed(2)}
-                </Text>
+                <Text style={[styles.itemTotal, { color: colors.primary }]}> {formatVND(item.price * item.quantity)} </Text>
                 <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={styles.removeButton}>
                   <Feather name="trash-2" size={20} color={colors.error} />
                 </TouchableOpacity>
@@ -100,20 +100,20 @@ const CartScreen = ({ navigation }) => {
         <View style={[styles.summaryContainer, { backgroundColor: colors.surface }]}>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Subtotal</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>${subTotal.toFixed(2)}</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(subTotal)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Shipping</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>$5.00</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(5000)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Tax</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>$3.24</Text>
+            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(3240)}</Text>
           </View>
           <View style={[styles.divider, { backgroundColor: colors.surfaceVariant }]} />
           <View style={styles.summaryRow}>
             <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total</Text>
-            <Text style={[styles.totalValue, { color: colors.primary }]}>${(subTotal + 5.00 + 3.24).toFixed(2)}</Text>
+            <Text style={[styles.totalValue, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
           </View>
         </View>
 
@@ -127,7 +127,7 @@ const CartScreen = ({ navigation }) => {
       }]}>
         <View style={styles.totalSection}>
           <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total:</Text>
-          <Text style={[styles.totalAmount, { color: colors.primary }]}>${(subTotal + 5.00 + 3.24).toFixed(2)}</Text>
+          <Text style={[styles.totalAmount, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
