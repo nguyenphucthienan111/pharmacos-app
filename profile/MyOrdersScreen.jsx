@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator,
-    Alert, ScrollView, SafeAreaView, Platform
+    Alert, ScrollView, SafeAreaView, Platform, Modal, TextInput
 } from '../components/WebCompatUI';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
@@ -19,6 +19,16 @@ const ORDER_STATUS_MAP = {
 
 const ORDER_TABS = ["all", "pending", "processing", "completed", "cancelled"];
 
+const CANCEL_REASONS = [
+    'I want to change the delivery address',
+    'I want to change the product in the order',
+    'I found a better price elsewhere',
+    'I do not want to buy it anymore',
+    'Ordered the wrong product',
+    'Delivery time is too long',
+    'Other reason',
+];
+
 const MyOrdersScreen = () => {
     const { colors, typography } = useTheme();
     const { fetchMyOrders, cancelOrder, loading: contextLoading } = useUser();
@@ -27,6 +37,10 @@ const MyOrdersScreen = () => {
     const [orders, setOrders] = useState([]);
     const [activeTab, setActiveTab] = useState('all');
     const [loading, setLoading] = useState(true);
+    const [cancelModalVisible, setCancelModalVisible] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [cancelReason, setCancelReason] = useState('');
+    const [customReason, setCustomReason] = useState('');
 
     // --- SỬA LỖI: Cập nhật cách sử dụng useFocusEffect ---
     useFocusEffect(
@@ -61,30 +75,28 @@ const MyOrdersScreen = () => {
     // --- KẾT THÚC SỬA LỖI ---
 
     const handleCancelOrder = (orderId) => {
-        Alert.alert(
-            "Confirm Cancellation",
-            "Are you sure you want to cancel this order?",
-            [
-                { text: "No", style: "cancel" },
-                {
-                    text: "Yes, Cancel",
-                    style: "destructive",
-                    onPress: async () => {
-                        const result = await cancelOrder(orderId, "Customer request");
-                        if (result.success) {
-                            Alert.alert("Success", result.message);
-                            // Tải lại danh sách đơn hàng sau khi hủy thành công
-                            setLoading(true);
-                            const updatedOrders = await fetchMyOrders();
-                            setOrders(updatedOrders || []);
-                            setLoading(false);
-                        } else {
-                            Alert.alert("Error", result.message || "Could not cancel the order.");
-                        }
-                    },
-                },
-            ]
-        );
+        setCancelOrderId(orderId);
+        setCancelReason('');
+        setCustomReason('');
+        setCancelModalVisible(true);
+    };
+    const confirmCancelOrder = async () => {
+        let reasonToSend = cancelReason === 'Lý do khác' ? customReason : cancelReason;
+        if (!reasonToSend.trim()) {
+            Alert.alert('Vui lòng chọn hoặc nhập lý do hủy đơn hàng!');
+            return;
+        }
+        setCancelModalVisible(false);
+        const result = await cancelOrder(cancelOrderId, reasonToSend);
+        if (result.success) {
+            Alert.alert('Success', result.message);
+            setLoading(true);
+            const updatedOrders = await fetchMyOrders();
+            setOrders(updatedOrders || []);
+            setLoading(false);
+        } else {
+            Alert.alert('Error', result.message || 'Could not cancel the order.');
+        }
     };
 
     const filteredOrders = activeTab === 'all'
@@ -262,6 +274,53 @@ const MyOrdersScreen = () => {
                     ListEmptyComponent={<View style={styles.emptyContainer}><Text style={styles.emptyText}>No orders in this category.</Text></View>}
                 />
             )}
+            <Modal
+                visible={cancelModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setCancelModalVisible(false)}
+            >
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                    <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24, width: '90%' }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 16 }}>Lý do hủy đơn hàng</Text>
+                        {CANCEL_REASONS.map(reason => (
+                            <TouchableOpacity
+                                key={reason}
+                                style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}
+                                onPress={() => setCancelReason(reason)}
+                            >
+                                <View style={{
+                                    width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#1976d2', marginRight: 10,
+                                    alignItems: 'center', justifyContent: 'center', backgroundColor: cancelReason === reason ? '#1976d2' : '#fff'
+                                }}>
+                                    {cancelReason === reason && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' }} />}
+                                </View>
+                                <Text style={{ color: '#333', fontSize: 15 }}>{reason}</Text>
+                            </TouchableOpacity>
+                        ))}
+                        {cancelReason === 'Lý do khác' && (
+                            <TextInput
+                                style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, marginTop: 10, fontSize: 15 }}
+                                placeholder="Nhập lý do cụ thể..."
+                                value={customReason}
+                                onChangeText={setCustomReason}
+                                multiline
+                            />
+                        )}
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
+                            <TouchableOpacity onPress={() => setCancelModalVisible(false)} style={{ marginRight: 16 }}>
+                                <Text style={{ color: '#1976d2', fontWeight: 'bold' }}>Đóng</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={confirmCancelOrder}
+                                style={{ backgroundColor: '#ff4d4f', paddingVertical: 10, paddingHorizontal: 24, borderRadius: 8 }}
+                            >
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Xác nhận hủy</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };

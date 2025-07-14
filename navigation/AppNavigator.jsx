@@ -22,6 +22,7 @@ import MyOrdersScreen from "../profile/MyOrdersScreen";
 import AIImageSearchScreen from "../screens/AIImageSearchScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
 import OrderDetailScreen from "../profile/OrderDetailScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -110,6 +111,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'My Cart' }} />
             <Stack.Screen name="Category" component={CategoryScreen} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
             <Stack.Screen name="AIImageSearch" component={AIImageSearchScreen} options={{ title: 'Search by Image' }} />
             <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ title: 'Personal Info' }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />

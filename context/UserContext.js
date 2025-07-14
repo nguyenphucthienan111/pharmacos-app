@@ -19,6 +19,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const [addresses, setAddresses] = useState([]);
 
   const fetchCart = async (currentToken) => {
     if (!currentToken) {
@@ -171,6 +172,28 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // Hàm clearCart: xóa toàn bộ giỏ hàng trên server và local
+  const clearCart = async () => {
+    if (!token) {
+      setCartItems([]);
+      return;
+    }
+    try {
+      const response = await fetch(ApiEndpoints.CART.CLEAR, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setCartItems([]);
+      } else {
+        // Nếu API không hỗ trợ xoá toàn bộ, fallback về clear local
+        setCartItems([]);
+      }
+    } catch (err) {
+      setCartItems([]);
+    }
+  };
+
   // ... (các hàm khác không đổi)
   const register = async (userData) => {
     setLoading(true);
@@ -308,9 +331,12 @@ export const UserProvider = ({ children }) => {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch addresses');
-      return await response.json();
+      const data = await response.json();
+      setAddresses(data.addresses || data || []);
+      return data.addresses || data || [];
     } catch (err) {
       console.error("Fetch addresses error:", err);
+      setAddresses([]);
       return [];
     }
   };
@@ -515,6 +541,7 @@ export const UserProvider = ({ children }) => {
     error,
     cartItems,
     setCartItems,
+    addresses,
     login,
     register,
     logout,
@@ -538,7 +565,8 @@ export const UserProvider = ({ children }) => {
     addToCart,
     updateCartItemQuantity,
     removeCartItem,
-    fetchCart
+    fetchCart,
+    clearCart
   };
 
   return (

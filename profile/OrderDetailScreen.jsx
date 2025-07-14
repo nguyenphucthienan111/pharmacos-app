@@ -22,7 +22,7 @@ const OrderDetailScreen = () => {
     const { colors } = useTheme();
     const { params } = useRoute();
     const navigation = useNavigation();
-    const { token } = useUser();
+    const { token, addToCart } = useUser();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -58,6 +58,31 @@ const OrderDetailScreen = () => {
             })
             .catch(() => setLoading(false));
     }, [params?.orderId, token]);
+
+    // Thêm hàm xử lý Buy Again
+    const handleBuyAgain = async () => {
+        if (!order || !order.items) return;
+        let added = 0;
+        for (const item of order.items) {
+            const prod = item.productId;
+            if (!prod || !prod._id || !prod.name) {
+                continue;
+            }
+            const result = await addToCart({
+                id: prod._id,
+                name: prod.name,
+                price: prod.price,
+                image: prod.images?.[0]?.url || prod.images?.[0],
+            }, item.quantity || 1);
+            if (result.success) added++;
+        }
+        if (added > 0) {
+            Alert.alert('Success', `Đã thêm ${added} sản phẩm vào giỏ hàng!`);
+            navigation.navigate('Cart');
+        } else {
+            Alert.alert('Không thể mua lại', 'Không có sản phẩm nào còn tồn tại để thêm vào giỏ hàng.');
+        }
+    };
 
     if (loading) {
         return (
@@ -165,7 +190,7 @@ const OrderDetailScreen = () => {
 
                 {/* Nút mua lại và Back */}
                 <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.buyAgainButton} onPress={() => Alert.alert('Buy Again', 'Chức năng này sẽ được phát triển sau!')}>
+                    <TouchableOpacity style={styles.buyAgainButton} onPress={handleBuyAgain}>
                         <Feather name="shopping-cart" size={20} color="#fff" />
                         <Text style={styles.buyAgainButtonText}>Buy Again</Text>
                     </TouchableOpacity>
