@@ -83,7 +83,13 @@ const OrderDetailScreen = () => {
                 {/* Header: trạng thái, mã đơn, ngày đặt */}
                 <View style={styles.headerBox}>
                     <View style={styles.headerRow}>
-                        <Text style={styles.orderIdHeader}>#{order.id || order._id}</Text>
+                        <Text
+                            style={styles.orderIdHeader}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
+                            #{order.id || order._id}
+                        </Text>
                         <View style={[styles.statusBadge, { backgroundColor: ORDER_STATUS_MAP[status]?.color }]}>
                             <Text style={styles.statusText}>{ORDER_STATUS_MAP[status]?.label || status}</Text>
                         </View>
@@ -150,7 +156,6 @@ const OrderDetailScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Payment & Summary</Text>
                     <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Payment method</Text><Text style={styles.summaryValue}>{order.paymentMethod === 'cash' ? 'Cash (COD)' : order.paymentMethod === 'cod' ? 'COD' : order.paymentMethod === 'bank' ? 'Bank transfer' : order.paymentMethod === 'online' ? 'Online payment' : order.paymentMethod || '-'}</Text></View>
-                    <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Payment status</Text><Text style={[styles.summaryValue, { color: order.paymentStatus === 'success' ? '#52c41a' : '#faad14' }]}>{order.paymentStatus === 'success' ? 'Paid' : 'Pending'}</Text></View>
                     <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Total</Text><Text style={styles.summaryValue}>{formatVND(total)}</Text></View>
                     <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Direct discount</Text><Text style={[styles.summaryValue, { color: '#ff9800' }]}>{formatVND(discount)}</Text></View>
                     <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Voucher discount</Text><Text style={[styles.summaryValue, { color: '#ff9800' }]}>{formatVND(voucherDiscount)}</Text></View>
@@ -180,12 +185,12 @@ const styles = StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
     title: { fontSize: 22, fontWeight: 'bold', color: '#1a237e', flex: 1 },
     statusBadge: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         paddingVertical: 7,
         borderRadius: 16,
-        marginLeft: 6, // giảm từ 16 xuống 6
+        marginLeft: 6,
         marginRight: 8,
-        minWidth: 80,
+        minWidth: 100,
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 2,
@@ -226,31 +231,30 @@ const styles = StyleSheet.create({
     headerBox: { backgroundColor: '#fff', padding: 18, borderBottomWidth: 1, borderBottomColor: '#e3e3e3', marginBottom: 10, borderRadius: 0, elevation: 2 },
     headerRow: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 6,
+        alignItems: 'center',
+        gap: 8,
+    },
+    orderIdHeader: {
+        maxWidth: '65%', // hoặc 200 nếu muốn dùng pixel
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
     },
     statusBadge: {
-        paddingHorizontal: 16,
-        paddingVertical: 7,
-        borderRadius: 16,
-        marginLeft: 1, // giảm từ 16 xuống 6
-        marginRight: 108,
-        minWidth: 80,
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        minWidth: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
     },
     statusText: {
         color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-        letterSpacing: 0.5,
+        fontWeight: '600',
+        fontSize: 13,
     },
-    orderIdHeader: { fontWeight: 'bold', fontSize: 20, color: '#1976d2', marginRight: 12 },
     orderDateHeader: { color: '#888', fontSize: 14 },
     infoRow: { flexDirection: 'row', gap: 12, marginBottom: 10, paddingHorizontal: 12 },
     infoCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 4, elevation: 2, borderWidth: 1, borderColor: '#e3e3e3' },

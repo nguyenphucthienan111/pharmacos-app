@@ -99,7 +99,7 @@ const MyOrdersScreen = () => {
             <TouchableOpacity onPress={() => navigation.navigate('OrderDetailScreen', { orderId: item.id || item._id })}>
                 <View style={styles.orderCard}>
                     <View style={styles.orderHeader}>
-                        <Text style={styles.orderId}>Order #{item.id || item._id}</Text>
+                        <Text style={styles.orderId} numberOfLines={1} ellipsizeMode="tail">Order #{item.id || item._id}</Text>
                         <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
                             <Text style={styles.statusText}>{statusInfo.label}</Text>
                         </View>
@@ -174,11 +174,29 @@ const MyOrdersScreen = () => {
             borderBottomWidth: 1,
             borderBottomColor: '#f0f0f0',
             paddingBottom: 10,
-            marginBottom: 10
+            marginBottom: 10,
+            gap: 8,
         },
-        orderId: { fontSize: 16, fontWeight: 'bold' },
-        statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-        statusText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+        orderId: {
+            maxWidth: '65%',
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#333',
+        },
+        statusBadge: {
+            paddingVertical: 4,
+            paddingHorizontal: 10,
+            borderRadius: 20,
+            alignSelf: 'flex-start',
+            minWidth: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        statusText: {
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: 13,
+        },
         productItem: {
             flexDirection: 'row',
             justifyContent: 'space-between',
