@@ -70,7 +70,7 @@ const ProductDetailScreen = ({ route }) => {
   const { productId } = route.params;
   const { colors } = useTheme();
   const { user, fetchProductById, toggleFavorite, submitReview, deleteReview, addToCart, addFavorite, removeFavorite, fetchFavorites } = useUser();
-
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [product, setProduct] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -144,18 +144,36 @@ const ProductDetailScreen = ({ route }) => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!product.inStock) {
+  const handleAddToCart = async () => {
+    if (!user) {
+      Alert.alert("Login Required", "Please log in to add items to your cart.");
+      return;
+    }
+    if (product.stockQuantity <= 0) {
       Alert.alert("Out of Stock", "This product is currently unavailable.");
       return;
     }
-    addToCart({
+
+    setIsAddingToCart(true);
+
+    const discountedPrice = product.price != null && product.discount
+      ? product.price * (1 - product.discount / 100)
+      : product.price;
+
+    const result = await addToCart({
       id: product._id,
       name: product.name,
-      price: discountedPrice || product.price,
+      price: discountedPrice,
       image: product.images[0],
     }, quantity);
-    Alert.alert("Success", `${quantity} x ${product.name} added to your cart.`);
+
+    setIsAddingToCart(false);
+
+    if (result.success) {
+      Alert.alert("Success!", `${quantity} x ${product.name} has been added to your cart.`);
+    } else {
+      Alert.alert("Error", result.message || "Failed to add item to cart. Please try again.");
+    }
   };
 
   const handleSubmitReview = async (reviewData) => {
@@ -266,7 +284,9 @@ const ProductDetailScreen = ({ route }) => {
           )} keyExtractor={(item, index) => index.toString()} contentContainerStyle={styles.thumbnailContainer} />
         )}
         <View style={styles.infoContainer}>
-          <Text style={styles.brand}>{product.brand}</Text>
+          <Text style={styles.brand}>
+            {Array.isArray(product.brand) ? product.brand.join(', ') : product.brand}
+          </Text>
           <Text style={styles.productName}>{product.name}</Text>
           {typeof product.rating === 'number' && product.rating > 0 && (
             <View style={styles.ratingContainer}>
@@ -314,8 +334,12 @@ const ProductDetailScreen = ({ route }) => {
           <Text style={styles.quantityText}>{quantity}</Text>
           <TouchableOpacity onPress={() => setQuantity(q => q + 1)}><Text style={styles.quantityButton}>+</Text></TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-          <Text style={styles.addToCartButtonText}>Add to Cart</Text>
+        <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart} disabled={isAddingToCart}>
+          {isAddingToCart ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.addToCartButtonText}>Add to Cart</Text>
+          )}
         </TouchableOpacity>
       </View>
       <ReviewFormModal

@@ -39,4 +39,11 @@ export const ApiEndpoints = {
   AI: {
     SEARCH_BY_IMAGE: `${API_BASE_URL}/ai/search-by-image`,
   },
+  CART: {
+    GET: `${API_BASE_URL}/cart`,
+    ADD_ITEM: `${API_BASE_URL}/cart/items`,
+    UPDATE_ITEM: (id) => `${API_BASE_URL}/cart/items/${id}`,
+    REMOVE_ITEM: (id) => `${API_BASE_URL}/cart/items/${id}`,
+    CLEAR: `${API_BASE_URL}/cart`,
+  },
 };

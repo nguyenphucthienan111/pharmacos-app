@@ -103,7 +103,9 @@ const AppNavigator = () => {
         ) : (
           // Người dùng thông thường
           <>
+            {/* <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} /> */}
             <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+            <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'My Cart' }} />
             <Stack.Screen name="Category" component={CategoryScreen} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
             <Stack.Screen name="AIImageSearch" component={AIImageSearchScreen} options={{ title: 'Search by Image' }} />

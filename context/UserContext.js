@@ -3,30 +3,78 @@ import UserRepository from "../repository/UserRepository";
 import { User } from "../models/User";
 import { ApiEndpoints } from "../config/apiConfig";
 
-const UserContext = createContext();
+const UserContext = createContext(undefined);
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+
+  const fetchCart = async (currentToken) => {
+    if (!currentToken) {
+      setCartItems([]);
+      return;
+    }
+    try {
+      const response = await fetch(ApiEndpoints.CART.GET, {
+        headers: { 'Authorization': `Bearer ${currentToken}` },
+      });
+      const data = await response.json();
+      if (response.ok && Array.isArray(data.items)) {
+        const mappedItems = data.items
+          .map(item => {
+            // Bỏ qua item nếu productId không tồn tại hoặc là null
+            if (!item.productId || typeof item.productId !== 'object') {
+              return null;
+            }
+
+            const product = item.productId;
+
+            return {
+              id: item._id,
+              productId: product._id,
+              name: product.name,
+              price: product.price,
+              image: product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url || product.images?.[0],
+              quantity: item.quantity,
+            };
+          })
+          .filter(Boolean); // Lọc bỏ các giá trị null ra khỏi mảng
+
+        setCartItems(mappedItems);
+      } else {
+        setCartItems([]);
+      }
+    } catch (err) {
+      console.error("Fetch cart error:", err);
+      setCartItems([]);
+    }
+  };
 
   useEffect(() => {
-    loadUser();
+    const loadUserAndCart = async () => {
+      setLoading(true);
+      const userData = await UserRepository.getUser();
+      const storedToken = await UserRepository.getToken();
+      if (userData && storedToken) {
+        setUser(new User(userData));
+        setToken(storedToken);
+        await fetchCart(storedToken);
+      }
+      setLoading(false);
+    };
+    loadUserAndCart();
   }, []);
-
-  const loadUser = async () => {
-    setLoading(true);
-    const userData = await UserRepository.getUser();
-    const storedToken = await UserRepository.getToken();
-    if (userData && storedToken) {
-      setUser(new User(userData));
-      setToken(storedToken);
-    }
-    setLoading(false);
-  };
 
   const login = async (username, password) => {
     setLoading(true);
@@ -39,16 +87,17 @@ export const UserProvider = ({ children }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Login failed');
+      if (!response.ok || !data.user) {
+        throw new Error(data.message || 'Login failed: User data not found in response');
+      }
 
       const loggedInUser = new User(data.user);
-
       await UserRepository.saveUser(loggedInUser);
       await UserRepository.saveToken(data.token);
 
       setUser(loggedInUser);
       setToken(data.token);
-
+      await fetchCart(data.token);
       return { success: true };
     } catch (err) {
       console.error("Login failed:", err);
@@ -63,8 +112,66 @@ export const UserProvider = ({ children }) => {
     await UserRepository.clearAll();
     setUser(null);
     setToken(null);
+    setCartItems([]);
   };
 
+  const addToCart = async (product, quantity = 1) => {
+    if (!token) return { success: false, message: 'Please log in' };
+    try {
+      const response = await fetch(ApiEndpoints.CART.ADD_ITEM, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ productId: product.id, quantity }),
+      });
+      if (response.ok) {
+        await fetchCart(token);
+        return { success: true };
+      }
+      const data = await response.json();
+      throw new Error(data.message || 'Could not add item');
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const updateCartItemQuantity = async (itemId, quantity) => {
+    if (!token) return { success: false, message: 'Please log in' };
+    try {
+      const response = await fetch(ApiEndpoints.CART.UPDATE_ITEM(itemId), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ quantity }),
+      });
+      if (response.ok) {
+        await fetchCart(token);
+        return { success: true };
+      }
+      const data = await response.json();
+      throw new Error(data.message || 'Could not update item');
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  const removeCartItem = async (itemId) => {
+    if (!token) return { success: false, message: 'Please log in' };
+    try {
+      const response = await fetch(ApiEndpoints.CART.REMOVE_ITEM(itemId), {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        await fetchCart(token);
+        return { success: true };
+      }
+      const data = await response.json();
+      throw new Error(data.message || 'Could not remove item');
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  };
+
+  // ... (các hàm khác không đổi)
   const register = async (userData) => {
     setLoading(true);
     setError(null);
@@ -393,8 +500,7 @@ export const UserProvider = ({ children }) => {
       });
       if (!response.ok) throw new Error('Failed to fetch favorites');
       const data = await response.json();
-      // console.log("Fetched favorites:", data);
-      return data.data; // Assuming the API returns favorites in a `data` property
+      return data.data;
     } catch (err) {
       console.error("Fetch favorites error:", err);
       return [];
@@ -402,38 +508,42 @@ export const UserProvider = ({ children }) => {
   };
 
 
+  const value = {
+    user,
+    token,
+    loading,
+    error,
+    cartItems,
+    setCartItems,
+    login,
+    register,
+    logout,
+    fetchUserProfile,
+    updateUserProfile,
+    updatePassword,
+    validatePassword,
+    fetchAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    fetchMyOrders,
+    cancelOrder,
+    fetchProducts,
+    fetchProductById,
+    submitReview,
+    toggleFavorite,
+    fetchFavorites,
+    addFavorite,
+    removeFavorite,
+    addToCart,
+    updateCartItemQuantity,
+    removeCartItem,
+    fetchCart
+  };
+
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        error,
-        login,
-        register,
-        logout,
-        fetchUserProfile,
-        updateUserProfile,
-        updatePassword,
-        validatePassword,
-        fetchAddresses,
-        addAddress,
-        updateAddress,
-        deleteAddress,
-        fetchMyOrders,
-        cancelOrder,
-        fetchProducts,
-        fetchProductById,
-        submitReview,
-        toggleFavorite,
-        fetchFavorites,
-        addFavorite,
-        removeFavorite,
-      }}
-    >
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
 };
-
-export { UserContext };
