@@ -1,6 +1,6 @@
 // screens/FavoritesScreen.jsx
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import {
 } from "../components/WebCompatUI";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
-import { UserContext } from "../context/UserContext";
+import { useUser } from "../context/UserContext"; // Corrected import
 import ProductCard from "../components/ProductCard";
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -23,7 +23,7 @@ const FavoritesScreen = ({ navigation }) => {
     const { colors, typography } = useTheme();
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user, fetchFavorites, removeFavorite } = useContext(UserContext);
+    const { user, fetchFavorites, removeFavorite } = useUser(); // Correctly use the hook
 
     const loadFavorites = async () => {
         if (!user) {
