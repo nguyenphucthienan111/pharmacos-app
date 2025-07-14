@@ -28,8 +28,10 @@ export const ApiEndpoints = {
     GET_ALL: `${API_BASE_URL}/products`,
     GET_BY_ID: (id) => `${API_BASE_URL}/products/${id}`,
     ADD_REVIEW: (id) => `${API_BASE_URL}/products/${id}/reviews`,
-    UPDATE_REVIEW: (productId, reviewId) => `${API_BASE_URL}/products/${productId}/reviews/${reviewId}`,
-    DELETE_REVIEW: (productId, reviewId) => `${API_BASE_URL}/products/${productId}/reviews/${reviewId}`,
+    UPDATE_REVIEW: (productId, reviewId) =>
+      `${API_BASE_URL}/products/${productId}/reviews/${reviewId}`,
+    DELETE_REVIEW: (productId, reviewId) =>
+      `${API_BASE_URL}/products/${productId}/reviews/${reviewId}`,
   },
   FAVORITES: {
     GET_ALL: `${API_BASE_URL}/favorites`,

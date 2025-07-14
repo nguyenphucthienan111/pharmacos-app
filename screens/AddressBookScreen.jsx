@@ -7,57 +7,299 @@ import { useUser } from '../context/UserContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { Feather } from '@expo/vector-icons';
 
+// SelectModal component for custom dropdown
+const SelectModal = ({ visible, options, value, onSelect, onClose, label }) => (
+    <Modal visible={visible} transparent animationType="fade">
+        <View style={{
+            flex: 1, justifyContent: 'center', alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.3)'
+        }}>
+            <View style={{
+                backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '85%', maxHeight: '70%'
+            }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>{label}</Text>
+                <FlatList
+                    data={options}
+                    keyExtractor={item => item.code?.toString() || item.name}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={{
+                                paddingVertical: 12, borderBottomWidth: 1,
+                                borderBottomColor: '#eee'
+                            }}
+                            onPress={() => { onSelect(item.name); onClose(); }}
+                        >
+                            <Text style={{
+                                fontSize: 16,
+                                color: value === item.name ? '#006782' : '#333',
+                                fontWeight: value === item.name ? 'bold' : 'normal'
+                            }}>{item.name}</Text>
+                        </TouchableOpacity>
+                    )}
+                />
+                <TouchableOpacity style={{ marginTop: 10, alignSelf: 'flex-end' }} onPress={onClose}>
+                    <Text style={{ color: '#006782', fontWeight: 'bold' }}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    </Modal>
+);
+
 // Component Form cho việc thêm/sửa địa chỉ
 const AddressForm = ({ visible, onCancel, onSave, address, isLoading }) => {
     const { colors } = useTheme();
-    // Khởi tạo formData với giá trị mặc định cho addressType
-    const [formData, setFormData] = useState(address || { addressType: 'Nhà riêng', isDefault: false });
+    const { user } = useUser();
+
+    // Default values from profile if not editing
+    const initialFormData = address
+        ? {
+            ...address,
+            addressType:
+                address.addressType === "Nhà riêng"
+                    ? "Home"
+                    : address.addressType === "Văn phòng"
+                        ? "Office"
+                        : address.addressType || "Home",
+        }
+        : {
+            name: user?.profile?.name || "",
+            phone: user?.profile?.phone || "",
+            addressType: "Home",
+            isDefault: false,
+            city: "",
+            district: "",
+            ward: "",
+            address: "",
+        };
+
+    const [formData, setFormData] = useState(initialFormData);
 
     useEffect(() => {
-        // Đảm bảo addressType luôn có giá trị khi mở form
-        setFormData(address || { addressType: 'Nhà riêng', isDefault: false });
+        // Reset form data when opening modal (for add or edit)
+        if (visible) {
+            setFormData(
+                address
+                    ? {
+                        ...address,
+                        addressType:
+                            address.addressType === "Nhà riêng"
+                                ? "Home"
+                                : address.addressType === "Văn phòng"
+                                    ? "Office"
+                                    : address.addressType || "Home",
+                    }
+                    : {
+                        name: user?.profile?.name || "",
+                        phone: user?.profile?.phone || "",
+                        addressType: "Home",
+                        isDefault: false,
+                        city: "",
+                        district: "",
+                        ward: "",
+                        address: "",
+                    }
+            );
+        }
+    }, [visible, address, user]);
+
+    // Always show user's profile name/phone in the input when adding new address
+    useEffect(() => {
+        if (visible && !address && user?.profile) {
+            setFormData(p => ({
+                ...p,
+                name: user.profile.name || "",
+                phone: user.profile.phone || "",
+            }));
+        }
+    }, [visible, address, user]);
+
+    // State for provinces/districts/wards
+    const [provinces, setProvinces] = useState([]);
+    const [districts, setDistricts] = useState([]);
+    const [wards, setWards] = useState([]);
+
+    // Modal visibility state
+    const [cityModal, setCityModal] = useState(false);
+    const [districtModal, setDistrictModal] = useState(false);
+    const [wardModal, setWardModal] = useState(false);
+
+    useEffect(() => {
+        // Fetch provinces/cities data once
+        fetch("https://provinces.open-api.vn/api/?depth=3")
+            .then((res) => res.json())
+            .then((data) => {
+                setProvinces(data);
+                // If editing, set districts/wards accordingly
+                if (address && address.city) {
+                    const selectedProvince = data.find(p => p.name === address.city);
+                    setDistricts(selectedProvince ? selectedProvince.districts : []);
+                    if (address.district) {
+                        const selectedDistrict = selectedProvince?.districts?.find(d => d.name === address.district);
+                        setWards(selectedDistrict ? selectedDistrict.wards : []);
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Failed to fetch provinces:", error);
+                // Optionally show error message
+            });
     }, [address]);
 
+    // Update districts when city changes
+    useEffect(() => {
+        if (formData.city) {
+            const selectedProvince = provinces.find(p => p.name === formData.city);
+            setDistricts(selectedProvince ? selectedProvince.districts : []);
+            setFormData(p => ({ ...p, district: '', ward: '' }));
+            setWards([]);
+        }
+    }, [formData.city]);
+
+    // Update wards when district changes
+    useEffect(() => {
+        if (formData.district) {
+            const selectedDistrict = districts.find(d => d.name === formData.district);
+            setWards(selectedDistrict ? selectedDistrict.wards : []);
+            setFormData(p => ({ ...p, ward: '' }));
+        }
+    }, [formData.district]);
+
     const handleSave = () => {
-        if (!formData.name || !formData.phone || !formData.address) {
-            Alert.alert("Error", "Please fill in Name, Phone, and Address.");
+        if (!formData.address || !formData.city || !formData.district || !formData.ward) {
+            Alert.alert("Error", "Please fill in all required address fields.");
             return;
         }
-        onSave(formData);
+        // If name/phone is empty, fallback to profile
+        const dataToSave = {
+            ...formData,
+            name: formData.name || user?.profile?.name || "",
+            phone: formData.phone || user?.profile?.phone || "",
+        };
+        onSave(dataToSave);
+        // Clear address info after save (keep name/phone from profile)
+        setFormData({
+            name: user?.profile?.name || "",
+            phone: user?.profile?.phone || "",
+            addressType: "Home",
+            isDefault: false,
+            city: "",
+            district: "",
+            ward: "",
+            address: "",
+        });
     };
 
+    // Change addressTypeOptions to English labels
+    const addressTypeOptions = [
+        { label: "Home", value: "Home" },
+        { label: "Office", value: "Office" },
+    ];
+
+    // Show name/phone as placeholder if empty, and allow user to clear/edit
     return (
         <Modal visible={visible} transparent animationType="slide">
             <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>{address ? 'Edit Address' : 'Add New Address'}</Text>
                     <ScrollView keyboardShouldPersistTaps="handled">
-                        <TextInput style={styles.input} placeholder="Full Name" value={formData.name || ''} onChangeText={text => setFormData(p => ({ ...p, name: text }))} />
-                        <TextInput style={styles.input} placeholder="Phone Number" value={formData.phone || ''} onChangeText={text => setFormData(p => ({ ...p, phone: text }))} keyboardType="phone-pad" />
-                        <TextInput style={styles.input} placeholder="City/Province" value={formData.city || ''} onChangeText={text => setFormData(p => ({ ...p, city: text }))} />
-                        <TextInput style={styles.input} placeholder="District" value={formData.district || ''} onChangeText={text => setFormData(p => ({ ...p, district: text }))} />
-                        <TextInput style={styles.input} placeholder="Ward" value={formData.ward || ''} onChangeText={text => setFormData(p => ({ ...p, ward: text }))} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Full Name"
+                            value={formData.name}
+                            onChangeText={text => setFormData(p => ({ ...p, name: text }))}
+                            autoCapitalize="words"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Phone Number"
+                            value={formData.phone}
+                            onChangeText={text => setFormData(p => ({ ...p, phone: text }))}
+                            keyboardType="phone-pad"
+                        />
+
+                        {/* City/Province Select */}
+                        <Text style={styles.label}>City/Province</Text>
+                        <TouchableOpacity
+                            style={[styles.input, { justifyContent: 'center' }]}
+                            onPress={() => setCityModal(true)}
+                        >
+                            <Text style={{ color: formData.city ? '#333' : '#888', fontSize: 16 }}>
+                                {formData.city || 'Select City/Province'}
+                            </Text>
+                        </TouchableOpacity>
+                        <SelectModal
+                            visible={cityModal}
+                            options={provinces}
+                            value={formData.city}
+                            onSelect={val => setFormData(p => ({ ...p, city: val }))}
+                            onClose={() => setCityModal(false)}
+                            label="Select City/Province"
+                        />
+
+                        {/* District Select */}
+                        <Text style={styles.label}>District</Text>
+                        <TouchableOpacity
+                            style={[styles.input, { justifyContent: 'center' }]}
+                            onPress={() => districts.length > 0 && setDistrictModal(true)}
+                            disabled={districts.length === 0}
+                        >
+                            <Text style={{ color: formData.district ? '#333' : '#888', fontSize: 16 }}>
+                                {formData.district || 'Select District'}
+                            </Text>
+                        </TouchableOpacity>
+                        <SelectModal
+                            visible={districtModal}
+                            options={districts}
+                            value={formData.district}
+                            onSelect={val => setFormData(p => ({ ...p, district: val }))}
+                            onClose={() => setDistrictModal(false)}
+                            label="Select District"
+                        />
+
+                        {/* Ward Select */}
+                        <Text style={styles.label}>Ward</Text>
+                        <TouchableOpacity
+                            style={[styles.input, { justifyContent: 'center' }]}
+                            onPress={() => wards.length > 0 && setWardModal(true)}
+                            disabled={wards.length === 0}
+                        >
+                            <Text style={{ color: formData.ward ? '#333' : '#888', fontSize: 16 }}>
+                                {formData.ward || 'Select Ward'}
+                            </Text>
+                        </TouchableOpacity>
+                        <SelectModal
+                            visible={wardModal}
+                            options={wards}
+                            value={formData.ward}
+                            onSelect={val => setFormData(p => ({ ...p, ward: val }))}
+                            onClose={() => setWardModal(false)}
+                            label="Select Ward"
+                        />
+
                         <TextInput style={styles.input} placeholder="Detailed Address" value={formData.address || ''} onChangeText={text => setFormData(p => ({ ...p, address: text }))} />
 
                         {/* --- KHỐI ĐÃ THAY ĐỔI: LỰA CHỌN LOẠI ĐỊA CHỈ --- */}
                         <Text style={styles.label}>Address Type</Text>
                         <View style={styles.addressTypeContainer}>
-                            <TouchableOpacity
-                                style={[styles.addressTypeButton, formData.addressType === 'Nhà riêng' && styles.addressTypeButtonActive]}
-                                onPress={() => setFormData(p => ({ ...p, addressType: 'Nhà riêng' }))}
-                            >
-                                <Text style={[styles.addressTypeButtonText, formData.addressType === 'Nhà riêng' && styles.addressTypeButtonTextActive]}>
-                                    Nhà riêng
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.addressTypeButton, formData.addressType === 'Văn phòng' && styles.addressTypeButtonActive]}
-                                onPress={() => setFormData(p => ({ ...p, addressType: 'Văn phòng' }))}
-                            >
-                                <Text style={[styles.addressTypeButtonText, formData.addressType === 'Văn phòng' && styles.addressTypeButtonTextActive]}>
-                                    Văn phòng
-                                </Text>
-                            </TouchableOpacity>
+                            {addressTypeOptions.map(opt => (
+                                <TouchableOpacity
+                                    key={opt.value}
+                                    style={[
+                                        styles.addressTypeButton,
+                                        formData.addressType === opt.value && styles.addressTypeButtonActive,
+                                    ]}
+                                    onPress={() => setFormData(p => ({ ...p, addressType: opt.value }))}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.addressTypeButtonText,
+                                            formData.addressType === opt.value && styles.addressTypeButtonTextActive,
+                                        ]}
+                                    >
+                                        {opt.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                         {/* --- KẾT THÚC THAY ĐỔI --- */}
 
@@ -82,7 +324,7 @@ const AddressForm = ({ visible, onCancel, onSave, address, isLoading }) => {
 
 const AddressBookScreen = () => {
     const { colors } = useTheme();
-    const { fetchAddresses, addAddress, updateAddress, deleteAddress } = useUser();
+    const { fetchAddresses, addAddress, updateAddress, deleteAddress, userProfile } = useUser();
     const [addresses, setAddresses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [formVisible, setFormVisible] = useState(false);
@@ -112,6 +354,7 @@ const AddressBookScreen = () => {
             Alert.alert("Success", `Address ${editingAddress ? 'updated' : 'added'} successfully.`);
             setFormVisible(false);
             setEditingAddress(null);
+            // No need to clear here, AddressForm handles reset after save
             loadData();
         } else {
             Alert.alert("Error", result.message);
@@ -146,7 +389,9 @@ const AddressBookScreen = () => {
             <Text style={styles.addressText}>{`${item.address}, ${item.ward}, ${item.district}, ${item.city}`}</Text>
             {item.addressType && (
                 <View style={[styles.typeBadge, { backgroundColor: colors.surfaceVariant }]}>
-                    <Text style={[styles.typeBadgeText, { color: colors.onSurfaceVariant }]}>{item.addressType}</Text>
+                    <Text style={[styles.typeBadgeText, { color: colors.onSurfaceVariant }]}>
+                        {item.addressType}
+                    </Text>
                 </View>
             )}
             <View style={styles.addressActions}>

@@ -49,7 +49,7 @@ const createPasswordStyles = (colors) => ({
 });
 
 const ChangePasswordScreen = ({ navigation }) => {
-  const { updatePassword, loading: contextLoading } = useUser();
+  const { updatePassword, logout, loading: contextLoading } = useUser();
   const { colors, typography } = useTheme();
 
   // Define styles inside the component
@@ -86,7 +86,7 @@ const ChangePasswordScreen = ({ navigation }) => {
       setError("Please fill in all fields.");
       return false;
     }
-    if (newPassword.length < 6) {
+    if (newPassword.length < 1) {
       setError("New password must be at least 6 characters.");
       return false;
     }
@@ -107,8 +107,21 @@ const ChangePasswordScreen = ({ navigation }) => {
     const result = await updatePassword(currentPassword, newPassword);
 
     if (result.success) {
-      Alert.alert("Success", result.message);
-      // Không cần điều hướng, vì context đã xử lý việc logout và navigator sẽ tự động chuyển màn hình
+      Alert.alert(
+        "Success",
+        "Password updated successfully. Please login again.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              logout();
+              // Optionally, you can navigate to login screen if needed
+              // navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+            }
+          }
+        ],
+        { cancelable: false }
+      );
     } else {
       setError(result.message);
     }
