@@ -23,6 +23,7 @@ export const ApiEndpoints = {
   ORDERS: {
     GET_MY_ORDERS: `${API_BASE_URL}/orders/my-orders`,
     CANCEL_ORDER: (id) => `${API_BASE_URL}/orders/${id}/cancel`,
+    GET_ORDER_DETAIL: (id) => `${API_BASE_URL}/orders/${id}`,
   },
   PRODUCTS: {
     GET_ALL: `${API_BASE_URL}/products`,

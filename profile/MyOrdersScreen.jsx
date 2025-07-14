@@ -7,6 +7,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../theme/ThemeProvider';
 import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { ApiEndpoints } from '../config/apiConfig';
 
 const ORDER_STATUS_MAP = {
     pending: { label: "Pending", color: "#faad14" },
@@ -20,6 +22,7 @@ const ORDER_TABS = ["all", "pending", "processing", "completed", "cancelled"];
 const MyOrdersScreen = () => {
     const { colors, typography } = useTheme();
     const { fetchMyOrders, cancelOrder, loading: contextLoading } = useUser();
+    const navigation = useNavigation();
 
     const [orders, setOrders] = useState([]);
     const [activeTab, setActiveTab] = useState('all');
@@ -31,12 +34,29 @@ const MyOrdersScreen = () => {
             const loadOrders = async () => {
                 setLoading(true);
                 const fetchedOrders = await fetchMyOrders();
-                setOrders(fetchedOrders || []);
+                // Fetch product details for each item if needed
+                const updatedOrders = await Promise.all((fetchedOrders || []).map(async (order) => {
+                    if (!order.items) return order;
+                    const updatedItems = await Promise.all(order.items.map(async (prod) => {
+                        if (typeof prod.productId === 'string') {
+                            try {
+                                const res = await fetch(ApiEndpoints.PRODUCTS.GET_BY_ID(prod.productId));
+                                const prodData = await res.json();
+                                return { ...prod, productId: prodData.product || prodData };
+                            } catch {
+                                return prod;
+                            }
+                        }
+                        return prod;
+                    }));
+                    return { ...order, items: updatedItems };
+                }));
+                setOrders(updatedOrders);
                 setLoading(false);
             };
 
             loadOrders();
-        }, [fetchMyOrders]) // fetchMyOrders là một dependency ổn định từ context
+        }, [fetchMyOrders])
     );
     // --- KẾT THÚC SỬA LỖI ---
 
@@ -76,32 +96,38 @@ const MyOrdersScreen = () => {
         const total = item.items?.reduce((sum, product) => sum + (product.unitPrice || 0) * (product.quantity || 0), 0) || 0;
 
         return (
-            <View style={styles.orderCard}>
-                <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>Order #{item.id || item._id}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
-                        <Text style={styles.statusText}>{statusInfo.label}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('OrderDetailScreen', { orderId: item.id || item._id })}>
+                <View style={styles.orderCard}>
+                    <View style={styles.orderHeader}>
+                        <Text style={styles.orderId}>Order #{item.id || item._id}</Text>
+                        <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
+                            <Text style={styles.statusText}>{statusInfo.label}</Text>
+                        </View>
+                    </View>
+                    {item.items?.map((prod, index) => (
+                        <View key={index} style={styles.productItem}>
+                            <Text style={styles.productName} numberOfLines={1}>
+                                {prod.productId && typeof prod.productId === 'object' && prod.productId.name
+                                    ? prod.productId.name
+                                    : 'Product has been deleted'}
+                            </Text>
+                            <Text style={styles.productDetails}>{prod.quantity} x {prod.unitPrice.toLocaleString()} VND</Text>
+                        </View>
+                    ))}
+                    <View style={styles.orderFooter}>
+                        <Text style={styles.totalText}>Total: {total.toLocaleString()} VND</Text>
+                        {item.status?.toLowerCase() === 'pending' && (
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => handleCancelOrder(item.id || item._id)}
+                                disabled={contextLoading}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
-                {item.items?.map((prod, index) => (
-                    <View key={index} style={styles.productItem}>
-                        <Text style={styles.productName} numberOfLines={1}>{prod.productId?.name || 'Product not available'}</Text>
-                        <Text style={styles.productDetails}>{prod.quantity} x {prod.unitPrice.toLocaleString()} VND</Text>
-                    </View>
-                ))}
-                <View style={styles.orderFooter}>
-                    <Text style={styles.totalText}>Total: {total.toLocaleString()} VND</Text>
-                    {item.status?.toLowerCase() === 'pending' && (
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => handleCancelOrder(item.id || item._id)}
-                            disabled={contextLoading}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
+            </TouchableOpacity>
         );
     };
 

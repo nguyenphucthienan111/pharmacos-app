@@ -21,6 +21,7 @@ import AddressBookScreen from "../screens/AddressBookScreen";
 import MyOrdersScreen from "../profile/MyOrdersScreen";
 import AIImageSearchScreen from "../screens/AIImageSearchScreen";
 import FavoritesScreen from "../screens/FavoritesScreen";
+import OrderDetailScreen from "../profile/OrderDetailScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -99,6 +100,7 @@ const AppNavigator = () => {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
             <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />
             <Stack.Screen name="MyOrders" component={MyOrdersScreen} options={{ title: 'My Orders' }} />
+            <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} options={{ title: 'Order Details' }} />
           </>
         ) : (
           // Người dùng thông thường
@@ -111,6 +113,7 @@ const AppNavigator = () => {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
             <Stack.Screen name="AddressBook" component={AddressBookScreen} options={{ title: 'My Addresses' }} />
             <Stack.Screen name="MyOrders" component={MyOrdersScreen} options={{ title: 'My Orders' }} />
+            <Stack.Screen name="OrderDetailScreen" component={OrderDetailScreen} options={{ title: 'Order Details' }} />
           </>
         )}
       </Stack.Navigator>

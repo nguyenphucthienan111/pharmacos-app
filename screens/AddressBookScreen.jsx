@@ -420,6 +420,8 @@ const AddressBookScreen = () => {
                     keyExtractor={item => item._id}
                     ListEmptyComponent={<Text style={styles.emptyText}>You have no saved addresses.</Text>}
                     contentContainerStyle={{ padding: 16 }}
+                    refreshing={loading}
+                    onRefresh={loadData}
                 />
             )}
             <AddressForm
