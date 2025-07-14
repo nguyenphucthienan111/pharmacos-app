@@ -14,11 +14,166 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeProvider";
 import { useUser } from "../context/UserContext";
 
-const formatVND = (amount) => amount.toLocaleString('vi-VN') + ' VND';
+const formatVND = (amount) => amount.toLocaleString("vi-VN") + " VND";
+
+const luxuryColors = {
+  gold: "#bfa14a",
+  goldLight: "#e5c07b",
+  navy: "#1a237e",
+  bg: "#f8f9fa",
+  card: "#fff",
+  border: "#e5c07b",
+  borderActive: "#bfa14a",
+  shadow: "rgba(191,161,74,0.15)",
+};
+
+const luxuryStyles = StyleSheet.create({
+  luxuryCard: {
+    backgroundColor: luxuryColors.card,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: luxuryColors.border,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: luxuryColors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  itemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    marginRight: 16,
+    backgroundColor: "#eee",
+  },
+  itemDetails: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: luxuryColors.navy,
+    marginBottom: 4,
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+  },
+  itemPrice: {
+    fontSize: 15,
+    color: luxuryColors.gold,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  quantityControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: luxuryColors.goldLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 4,
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: luxuryColors.navy,
+    marginHorizontal: 8,
+  },
+  itemTotal: {
+    fontSize: 15,
+    color: luxuryColors.navy,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  removeButton: {
+    padding: 8,
+    alignSelf: "flex-end",
+  },
+  summaryCard: {
+    backgroundColor: luxuryColors.card,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: luxuryColors.border,
+    padding: 18,
+    margin: 16,
+    marginTop: 0,
+    shadowColor: luxuryColors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 15,
+    color: "#555",
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+  },
+  summaryValue: {
+    fontSize: 15,
+    color: luxuryColors.navy,
+    fontWeight: "bold",
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: luxuryColors.goldLight,
+    marginVertical: 8,
+  },
+  totalLabel: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: luxuryColors.gold,
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: luxuryColors.navy,
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+  },
+  checkoutBtn: {
+    backgroundColor: luxuryColors.gold,
+    borderRadius: 24,
+    alignItems: "center",
+    paddingVertical: 16,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 30,
+    shadowColor: luxuryColors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  checkoutBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+});
 
 const CartScreen = ({ navigation }) => {
   const { colors, typography } = useTheme();
-  const { cartItems, loading, updateCartItemQuantity, removeCartItem } = useUser();
+  const {
+    cartItems,
+    loading,
+    updateCartItemQuantity,
+    removeCartItem,
+    clearCart,
+  } = useUser();
 
   const handleQuantityChange = (id, currentQuantity, change) => {
     const newQuantity = currentQuantity + change;
@@ -33,25 +188,39 @@ const CartScreen = ({ navigation }) => {
     removeCartItem(id);
   };
 
-  const subTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subTotal = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.onSurfaceVariant }]}>Loading cart...</Text>
+        <Text style={[styles.loadingText, { color: colors.onSurfaceVariant }]}>
+          Loading cart...
+        </Text>
       </SafeAreaView>
     );
   }
 
   if (cartItems.length === 0) {
     return (
-      <SafeAreaView style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.emptyContainer, { backgroundColor: colors.background }]}
+      >
         <Feather name="shopping-cart" size={64} color={colors.surfaceVariant} />
-        <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>Your cart is empty</Text>
+        <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
+          Your cart is empty
+        </Text>
         <TouchableOpacity
           style={[styles.shopButton, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate("Home")}
+          onPress={() => navigation.navigate("Main")}
         >
           <Text style={styles.shopButtonText}>Continue Shopping</Text>
         </TouchableOpacity>
@@ -60,83 +229,133 @@ const CartScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.itemsContainer}>
-          {cartItems.map((item) => (
-            <View key={item.id} style={[styles.cartItem, { backgroundColor: colors.surface }]}>
-              <Image source={{ uri: item.image }} style={styles.itemImage} resizeMode="cover" />
-              <View style={styles.itemDetails}>
-                <Text style={[styles.itemName, { color: colors.onSurfaceVariant }]}>{item.name}</Text>
-                <View style={styles.priceContainer}>
-                  <Text style={[styles.itemPrice, { color: colors.primary }]}>{formatVND(item.price)}</Text>
-                </View>
-                <View style={styles.quantityControl}>
-                  <TouchableOpacity
-                    style={[styles.quantityButton, { backgroundColor: colors.surfaceVariant }]}
-                    onPress={() => handleQuantityChange(item.id, item.quantity, -1)}
-                  >
-                    <Feather name="minus" size={16} color={colors.onSurfaceVariant} />
-                  </TouchableOpacity>
-                  <Text style={[styles.quantityText, { color: colors.onSurfaceVariant }]}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    style={[styles.quantityButton, { backgroundColor: colors.surfaceVariant }]}
-                    onPress={() => handleQuantityChange(item.id, item.quantity, 1)}
-                  >
-                    <Feather name="plus" size={16} color={colors.onSurfaceVariant} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.itemActions}>
-                <Text style={[styles.itemTotal, { color: colors.primary }]}> {formatVND(item.price * item.quantity)} </Text>
-                <TouchableOpacity onPress={() => handleRemoveItem(item.id)} style={styles.removeButton}>
-                  <Feather name="trash-2" size={20} color={colors.error} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: luxuryColors.bg }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 22,
+            fontWeight: "bold",
+            color: luxuryColors.gold,
+            fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+          }}
+        >
+          Your Cart
+        </Text>
+        {cartItems.length > 0 && (
+          <TouchableOpacity
+            onPress={clearCart}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 8,
+              borderRadius: 20,
+              backgroundColor: luxuryColors.goldLight,
+              marginLeft: 8,
+            }}
+          >
+            <Feather name="trash-2" size={22} color={luxuryColors.navy} />
+            <Text
+              style={{
+                marginLeft: 6,
+                color: luxuryColors.navy,
+                fontWeight: "bold",
+                fontSize: 15,
+                fontFamily: Platform.OS === "ios" ? "System" : "Roboto",
+              }}
+            >
+              Clear All
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 0 }}
+      >
+        {cartItems.map((item) => (
+          <View key={item.id} style={luxuryStyles.luxuryCard}>
+            <Image
+              source={{ uri: item.image }}
+              style={luxuryStyles.itemImage}
+              resizeMode="cover"
+            />
+            <View style={luxuryStyles.itemDetails}>
+              <Text style={luxuryStyles.itemName}>{item.name}</Text>
+              <Text style={luxuryStyles.itemPrice}>
+                {formatVND(item.price)}
+              </Text>
+              <View style={luxuryStyles.quantityControl}>
+                <TouchableOpacity
+                  style={luxuryStyles.quantityButton}
+                  onPress={() =>
+                    handleQuantityChange(item.id, item.quantity, -1)
+                  }
+                >
+                  <Feather name="minus" size={18} color={luxuryColors.navy} />
+                </TouchableOpacity>
+                <Text style={luxuryStyles.quantityText}>{item.quantity}</Text>
+                <TouchableOpacity
+                  style={luxuryStyles.quantityButton}
+                  onPress={() =>
+                    handleQuantityChange(item.id, item.quantity, 1)
+                  }
+                >
+                  <Feather name="plus" size={18} color={luxuryColors.navy} />
                 </TouchableOpacity>
               </View>
             </View>
-          ))}
-        </View>
-
-        <View style={[styles.summaryContainer, { backgroundColor: colors.surface }]}>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Subtotal</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(subTotal)}</Text>
+            <View
+              style={{
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                height: 60,
+              }}
+            >
+              <Text style={luxuryStyles.itemTotal}>
+                {formatVND(item.price * item.quantity)}
+              </Text>
+              <TouchableOpacity
+                onPress={() => handleRemoveItem(item.id)}
+                style={luxuryStyles.removeButton}
+              >
+                <Feather name="trash-2" size={20} color={luxuryColors.gold} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Shipping</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(5000)}</Text>
+        ))}
+        <View style={luxuryStyles.summaryCard}>
+          <View style={luxuryStyles.summaryRow}>
+            <Text style={luxuryStyles.summaryLabel}>Subtotal</Text>
+            <Text style={luxuryStyles.summaryValue}>{formatVND(subTotal)}</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: colors.onSurfaceVariant }]}>Tax</Text>
-            <Text style={[styles.summaryValue, { color: colors.onSurfaceVariant }]}>{formatVND(3240)}</Text>
+          <View style={luxuryStyles.summaryRow}>
+            <Text style={luxuryStyles.summaryLabel}>Shipping Fee</Text>
+            <Text style={luxuryStyles.summaryValue}>{formatVND(1000)}</Text>
           </View>
-          <View style={[styles.divider, { backgroundColor: colors.surfaceVariant }]} />
-          <View style={styles.summaryRow}>
-            <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total</Text>
-            <Text style={[styles.totalValue, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
+          <View style={luxuryStyles.divider} />
+          <View style={luxuryStyles.summaryRow}>
+            <Text style={luxuryStyles.totalLabel}>Total</Text>
+            <Text style={luxuryStyles.totalValue}>
+              {formatVND(subTotal + 1000)}
+            </Text>
           </View>
-        </View>
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      <View style={[styles.checkoutBar, {
-        backgroundColor: colors.surface,
-        borderTopColor: colors.surfaceVariant,
-        paddingBottom: Platform.OS === "ios" ? 24 : 16
-      }]}>
-        <View style={styles.totalSection}>
-          <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total:</Text>
-          <Text style={[styles.totalAmount, { color: colors.primary }]}>{formatVND(subTotal + 5000 + 3240)}</Text>
         </View>
         <TouchableOpacity
-          style={[styles.checkoutButton, { backgroundColor: colors.primary }]}
+          style={luxuryStyles.checkoutBtn}
           onPress={() => navigation.navigate("Checkout")}
         >
-          <Text style={styles.checkoutButtonText}>Checkout</Text>
-          <Feather name="arrow-right" size={20} color="#FFFFFF" />
+          <Text style={luxuryStyles.checkoutBtnText}>Checkout</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
