@@ -24,6 +24,10 @@ export const ApiEndpoints = {
     GET_MY_ORDERS: `${API_BASE_URL}/orders/my-orders`,
     CANCEL_ORDER: (id) => `${API_BASE_URL}/orders/${id}/cancel`,
     GET_ORDER_DETAIL: (id) => `${API_BASE_URL}/orders/${id}`,
+    PLACE_ORDER: `${API_BASE_URL}/orders`,
+  },
+  PAYMENTS: {
+    CREATE_PAYMENT_LINK: `${API_BASE_URL}/payments/create`,
   },
   PRODUCTS: {
     GET_ALL: `${API_BASE_URL}/products`,

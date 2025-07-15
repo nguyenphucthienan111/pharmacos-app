@@ -12,6 +12,7 @@ import {
   Platform,
   Image,
 } from "../components/WebCompatUI";
+import { Linking } from "react-native";
 import { useUser } from "../context/UserContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
@@ -105,13 +106,131 @@ const CheckoutScreen = ({ navigation }) => {
       const data = await res.json();
       console.log("Order API status:", res.status, "response:", data);
       if (res.status === 201 || res.ok) {
-        if (typeof clearCart === "function") clearCart();
-        Alert.alert("Order placed successfully!", "", [
-          {
-            text: "OK",
-            onPress: () => navigation.navigate("Main"),
-          },
-        ]);
+        // Xử lý khác nhau cho từng payment method
+        if (selectedPayment === "cod") {
+          // COD: Báo thành công ngay
+          if (typeof clearCart === "function") clearCart();
+          Alert.alert("Order placed successfully!", "", [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("Main"),
+            },
+          ]);
+        } else if (selectedPayment === "online") {
+          // Online Payment: Tạo payment link và chuyển hướng
+          try {
+            const orderId = data.order._id;
+            console.log("Creating payment link for order:", orderId);
+            console.log(
+              "Payment API endpoint:",
+              ApiEndpoints.PAYMENTS.CREATE_PAYMENT_LINK
+            );
+
+            const paymentRes = await fetch(
+              ApiEndpoints.PAYMENTS.CREATE_PAYMENT_LINK,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: token ? `Bearer ${token}` : "",
+                },
+                body: JSON.stringify({
+                  orderId: orderId,
+                  paymentMethod: "online",
+                }),
+              }
+            );
+
+            const paymentData = await paymentRes.json();
+            console.log("Payment API status:", paymentRes.status);
+            console.log("Payment API response:", paymentData);
+
+            if (paymentRes.ok && paymentData.success) {
+              // Clear cart sau khi tạo payment link thành công
+              if (typeof clearCart === "function") clearCart();
+
+              console.log("Payment link created successfully!");
+              console.log("Payment URL:", paymentData.data.paymentUrl);
+              console.log("Platform:", Platform.OS);
+
+              // Chuyển hướng đến PayOS
+              if (Platform.OS === "web") {
+                console.log("Opening PayOS URL in new tab...");
+                window.open(paymentData.data.paymentUrl, "_blank");
+              } else {
+                // Cho mobile, sử dụng Linking
+                console.log("Opening PayOS URL with Linking...");
+                await Linking.openURL(paymentData.data.paymentUrl);
+              }
+
+              Alert.alert(
+                "Redirecting to PayOS",
+                "You will be redirected to PayOS payment page with QR code. Please scan the QR code or complete the payment to confirm your order.",
+                [
+                  {
+                    text: "Copy Link",
+                    onPress: () => {
+                      if (Platform.OS === "web") {
+                        navigator.clipboard.writeText(
+                          paymentData.data.paymentUrl
+                        );
+                        Alert.alert("Link copied to clipboard!");
+                      }
+                    },
+                  },
+                  {
+                    text: "OK",
+                    onPress: () => navigation.navigate("Main"),
+                  },
+                ]
+              );
+            } else {
+              // Order đã tạo thành công nhưng payment link thất bại
+              console.log("Payment link creation failed!");
+              console.log("Payment response status:", paymentRes.status);
+              console.log("Payment error message:", paymentData.message);
+
+              // Vẫn clear cart và báo cho user
+              if (typeof clearCart === "function") clearCart();
+              Alert.alert(
+                "Order Created",
+                `Your order has been created successfully, but there was an issue creating the payment link: ${
+                  paymentData.message || "Unknown error"
+                }. Please contact support for assistance.`,
+                [
+                  {
+                    text: "OK",
+                    onPress: () => navigation.navigate("Main"),
+                  },
+                ]
+              );
+            }
+          } catch (paymentError) {
+            console.error("Payment creation error:", paymentError);
+            // Order đã tạo thành công nhưng payment link thất bại
+            // Vẫn clear cart và báo cho user
+            if (typeof clearCart === "function") clearCart();
+            Alert.alert(
+              "Order Created",
+              "Your order has been created successfully, but there was an issue creating the payment link. Please contact support for assistance.",
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate("Main"),
+                },
+              ]
+            );
+          }
+        } else {
+          // Xử lý các payment method khác (nếu có)
+          if (typeof clearCart === "function") clearCart();
+          Alert.alert("Order placed successfully!", "", [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("Main"),
+            },
+          ]);
+        }
       } else {
         console.log("Order failed branch", data); // Log chi tiết lỗi backend
         Alert.alert(
@@ -294,9 +413,9 @@ const CheckoutScreen = ({ navigation }) => {
             style={[
               luxuryStyles.luxuryCard,
               luxuryStyles.paymentOption,
-              selectedPayment === "bank" && luxuryStyles.selected,
+              selectedPayment === "online" && luxuryStyles.selected,
             ]}
-            onPress={() => setSelectedPayment("bank")}
+            onPress={() => setSelectedPayment("online")}
           >
             <Feather name="credit-card" size={28} color={luxuryColors.navy} />
             <Text style={luxuryStyles.cardTitle}>Bank Transfer via PayOS</Text>

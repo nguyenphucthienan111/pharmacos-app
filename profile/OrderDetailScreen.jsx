@@ -265,7 +265,7 @@ const OrderDetailScreen = () => {
                 : order.paymentMethod === "cod"
                 ? "COD"
                 : order.paymentMethod === "bank"
-                ? "Bank transfer"
+                ? "Online payment"
                 : order.paymentMethod === "online"
                 ? "Online payment"
                 : order.paymentMethod || "-"}
