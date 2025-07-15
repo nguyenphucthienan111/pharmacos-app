@@ -472,8 +472,8 @@ const ProductDetailScreen = ({ route }) => {
         </View>
         <View style={styles.tabContentContainer}>{renderTabContent()}</View>
 
-        <Text style={styles.similarProductsTitle}>You Might Also Like</Text>
-        <FlatList
+        {/* <Text style={styles.similarProductsTitle}>You Might Also Like</Text> */}
+        {/* <FlatList
           horizontal
           data={similarProducts}
           renderItem={({ item }) => (
@@ -489,7 +489,7 @@ const ProductDetailScreen = ({ route }) => {
           )}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.similarProductsList}
-        />
+        /> */}
         <View style={{ height: 100 }} />
       </ScrollView>
       <View style={[styles.bottomBar, { marginBottom: 20 }]}>
